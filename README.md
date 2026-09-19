@@ -1,157 +1,111 @@
-# GST Billing System
+# GSTKhata - GST Billing & Retail Management System
 
-A full-stack GST billing application for small/medium retail shops: manage parties (customers), maintain a
-reusable item catalog, create GST-compliant invoices with automatic CGST/SGST/IGST calculation, generate
-downloadable PDF invoices, and track bill history with a sales dashboard.
+GSTKhata is a full-stack GST Billing and Inventory Management application designed for Indian retail and electronics businesses. It features complete GST tax calculations (CGST, SGST, IGST), party ledger management, interactive analytics charts, PDF invoice generation, direct email dispatching, and role-based staff management.
 
-**Stack:** Express.js + PostgreSQL (backend) · React + Vite + Bootstrap (frontend)
+## System Architecture
 
-## Project Structure
+The application is structured as a single-repository full-stack system:
+
+- Frontend: React 18, Vite, Bootstrap 5, Bootstrap Icons, ChartJS
+- Backend: Node.js, Express.js, PostgreSQL (Neon Cloud / Local), PDFKit, Nodemailer
+- Deployment: Configured for single-project monorepo deployment on Vercel
+
+## Core Features
+
+- Business Dashboard: Real-time revenue metrics, monthly GST trends, payment status distribution, and top-selling product analytics charts.
+- GST Invoice Creation: Multi-item billing supporting intra-state (CGST + SGST) and inter-state (IGST) tax rules, automated HSN item lookup, and payment status tracking (Paid, Partial, Unpaid).
+- Party & Customer Directory: Manage customer and vendor profiles, GSTIN validation, and default billing addresses.
+- Electronics Catalog & Inventory: Manage items with unit prices, HSN codes, default GST slabs (18%, 28%), and stock tracking.
+- Automated Email Invoicing: Dispatch official HTML tax invoices with attached PDFKit generated invoices via Nodemailer.
+- Invoice History & CSV Export: Filter invoices by date range, search by customer or invoice number, export accounting data to CSV, and preview A4 formatted invoices.
+- Staff & Role Management: Role-based access control (Owner, Admin, Billing Operator) with granular security permissions.
+- Shop Profile Settings: Customizable business name, GSTIN, address, state, signature, and print preferences.
+
+## Repository Structure
 
 ```
-gst-billing-system/
+GST_Billing_System_Task/
+├── api/
+│   └── index.js              # Vercel serverless function handler
 ├── backend/
-│   ├── db/
-│   │   ├── schema.sql        # PostgreSQL table definitions
-│   │   └── init.js           # Script to apply schema.sql
+│   ├── db/                   # Database SQL schemas and migrations
 │   ├── src/
-│   │   ├── config/db.js      # PostgreSQL connection pool
-│   │   ├── controllers/      # parties, items, bills, dashboard
-│   │   ├── routes/           # Express route definitions
-│   │   └── utils/
-│   │       ├── gstCalculator.js  # CGST/SGST/IGST logic
-│   │       └── pdfGenerator.js   # PDF invoice generation (pdfkit)
-│   ├── server.js             # App entry point
-│   ├── package.json
-│   └── .env.example
-└── frontend/
-    ├── src/
-    │   ├── api/axios.js
-    │   ├── components/Navbar.jsx
-    │   ├── pages/
-    │   │   ├── Dashboard.jsx
-    │   │   ├── Parties.jsx
-    │   │   ├── Items.jsx
-    │   │   ├── CreateBill.jsx
-    │   │   ├── BillHistory.jsx
-    │   │   └── BillView.jsx
-    │   ├── App.jsx
-    │   └── main.jsx
-    ├── index.html
-    ├── package.json
-    └── .env.example
+│   │   ├── config/           # Database configuration
+│   │   ├── controllers/      # Route logic handlers
+│   │   ├── middleware/       # JWT auth & permission guards
+│   │   ├── routes/           # REST API route specifications
+│   │   ├── utils/            # PDF generation & email services
+│   │   └── app.js            # Express application export
+│   ├── server.js             # Local Node server entry point
+│   └── .env.example          # Environment variables template
+├── frontend/
+│   ├── src/                  # React components, pages, and routes
+│   └── .env.example          # Frontend environment variables template
+├── vercel.json               # Vercel single-project build configuration
+├── package.json              # Monorepo dependencies and scripts
+├── .gitignore                # Git exclusion rules
+└── LICENSE                   # MIT Open Source License
 ```
 
-## 1. Prerequisites
+## Setup & Local Development
 
-- Node.js 18+
-- PostgreSQL 13+ running locally (or a remote instance)
+### Prerequisites
 
-## 2. Backend Setup
+- Node.js (v18.x or higher)
+- npm (v9.x or higher)
+- PostgreSQL database (Neon Cloud PostgreSQL or local PostgreSQL instance)
 
-```bash
-cd backend
-npm install
-cp .env.example .env
-```
+### Installation
 
-Edit `.env` with your PostgreSQL credentials and shop details:
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/GSTKhata.git
+   cd GSTKhata
+   ```
 
-```
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=gst_billing
-DB_USER=postgres
-DB_PASSWORD=your_password_here
+2. Install dependencies for all packages:
+   ```bash
+   npm install
+   ```
 
-SHOP_NAME=Your Shop Name
-SHOP_ADDRESS=123, Main Market, Rajkot, Gujarat
-SHOP_STATE=Gujarat
-SHOP_GSTIN=24AAAAA0000A1Z5
-```
+3. Configure Environment Variables:
+   Copy `.env.example` to `.env` or create `backend/.env` with your credentials:
+   ```env
+   DATABASE_URL=postgresql://user:password@host.neon.tech/neondb?sslmode=require
+   JWT_SECRET=your_jwt_secret_key_here
+   PORT=5000
+   SMTP_USER=your_email@gmail.com
+   SMTP_PASS=your_gmail_app_password
+   ```
 
-Create the database, then apply the schema:
+4. Start Local Development Server:
+   ```bash
+   npm run dev
+   ```
 
-```bash
-# create the database (one time)
-createdb gst_billing
-# or: psql -U postgres -c "CREATE DATABASE gst_billing;"
+   The frontend will run on http://localhost:5173 and backend on http://localhost:5000.
 
-# apply schema
-npm run db:init
-```
+## Vercel Deployment (Single Project)
 
-Start the backend:
+This repository is configured to deploy both the Express API and Vite React frontend under a single Vercel project using Vercel Serverless Functions.
 
-```bash
-npm run dev      # with nodemon (auto-reload)
-# or
-npm start
-```
+### Deployment Steps
 
-The API runs at `http://localhost:5000/api`. Health check: `GET /api/health`.
+1. Push your repository to GitHub / GitLab / Bitbucket.
+2. Import the repository into Vercel as a New Project.
+3. Keep the Root Directory as `/` (default).
+4. Vercel automatically detects the build settings via `vercel.json`:
+   - Build Command: `npm run build`
+   - Output Directory: `frontend/dist`
+5. Configure Environment Variables in Vercel Project Settings:
+   - `DATABASE_URL`: Your PostgreSQL database connection string
+   - `JWT_SECRET`: Secret key for JWT verification
+   - `SMTP_USER`: Email address for dispatching invoices
+   - `SMTP_PASS`: Gmail App Password or SMTP password
+   - `SHOP_NAME`: Business display name
+   - `SHOP_GSTIN`: Business GSTIN number
+6. Deploy the project. Vercel will build the React static assets and route all `/api/*` endpoints to the serverless function.
 
-## 3. Frontend Setup
+## License
 
-```bash
-cd frontend
-npm install
-cp .env.example .env
-npm run dev
-```
-
-The app runs at `http://localhost:5173`.
-
-> `VITE_API_URL` in `frontend/.env` must point at your backend (default `http://localhost:5000/api`).
-
-## 4. GST Calculation Logic
-
-For each bill line:
-1. `Taxable Amount = Rate × Quantity`
-2. If the party's state **matches** the shop's state (`SHOP_STATE` in `.env`):
-   - `CGST = SGST = (GST% ÷ 2) of Taxable Amount`
-3. If the party's state is **different**:
-   - `IGST = GST% of Taxable Amount`
-4. `Line Total = Taxable Amount + Tax Applied`
-5. `Grand Total = Sum of all Line Totals`
-
-This is computed server-side (source of truth) in `backend/src/utils/gstCalculator.js`, with a live preview
-calculated in the frontend as you build a bill.
-
-**Note:** Once a bill is saved, it is immutable by design (no edit endpoint) — this matches real invoicing
-practice. To correct an error, create a new bill (a full credit-note workflow can be added as a future
-enhancement).
-
-## 5. API Endpoints
-
-| Method | Endpoint                    | Description                          |
-|--------|------------------------------|---------------------------------------|
-| GET    | /api/parties                 | List parties (supports `?search=`)   |
-| GET    | /api/parties/:id              | Get one party                        |
-| GET    | /api/parties/:id/bills         | Party's bill history                 |
-| POST   | /api/parties                 | Create party                         |
-| PUT    | /api/parties/:id              | Update party                         |
-| DELETE | /api/parties/:id              | Delete party                         |
-| GET    | /api/items                   | List items (supports `?search=`)     |
-| POST   | /api/items                   | Create item                          |
-| PUT    | /api/items/:id                | Update item                          |
-| DELETE | /api/items/:id                | Delete item                          |
-| GET    | /api/bills                   | List bills (`?party=&from=&to=`)     |
-| GET    | /api/bills/:id                 | Get bill with line items             |
-| POST   | /api/bills                   | Create bill (auto-calculates tax)    |
-| GET    | /api/bills/:id/pdf              | Download invoice PDF                 |
-| PATCH  | /api/bills/:id/status           | Update payment status (bonus)        |
-| GET    | /api/dashboard                | Sales/tax summary + recent bills     |
-
-## 6. Notes on Deliverables
-
-- To produce the **3 sample PDF invoices** required for submission: create 3 parties (mix same-state and
-  different-state from your `SHOP_STATE` to exercise both CGST/SGST and IGST paths), add a few items, create
-  3 bills via **New Bill**, then click **Download PDF** on each from the bill detail page.
-- Bonus features implemented: payment status tracking (Paid/Unpaid/Partial) and a GST-slab picker
-  (0/5/12/18/28%). Discount fields, Excel/CSV export, and multi-user login are left as extension points.
-
-## 7. Tech Stack Summary (for your report)
-
-- **Backend:** Node.js, Express.js, PostgreSQL (`pg` driver), `pdfkit` for PDF generation, `dotenv` for config
-- **Frontend:** React 18, Vite, React Router, Bootstrap 5, Axios
+This project is licensed under the MIT License - see the LICENSE file for details.

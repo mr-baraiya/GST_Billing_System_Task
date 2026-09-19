@@ -47,6 +47,13 @@ exports.getDashboard = async (req, res) => {
        LIMIT 5`
     );
 
+    const recentBills = await pool.query(
+      `SELECT id, invoice_no, invoice_date, party_name, grand_total, status
+       FROM bills
+       ORDER BY id DESC
+       LIMIT 5`
+    );
+
     res.json({
       totalSales: Number(totals.rows[0].total_sales),
       totalTax: Number(totals.rows[0].total_tax),

@@ -2,12 +2,25 @@
   "name": "gst-billing-system",
   "version": "1.0.0",
   "description": "GST Billing System - Express + PostgreSQL Backend & React Vite Frontend",
+  "main": "api/index.js",
   "scripts": {
     "dev": "concurrently \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
     "start": "concurrently \"npm --prefix backend start\" \"npm --prefix frontend run dev\"",
+    "build": "npm --prefix frontend run build",
+    "postinstall": "npm --prefix backend install && npm --prefix frontend install",
     "dev:backend": "npm --prefix backend run dev",
     "dev:frontend": "npm --prefix frontend run dev",
     "db:init": "npm --prefix backend run db:init"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.3",
+    "nodemailer": "^10.0.10",
+    "pdfkit": "^0.15.0",
+    "pg": "^8.12.0"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
