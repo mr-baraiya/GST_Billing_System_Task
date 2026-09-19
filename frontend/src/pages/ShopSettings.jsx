@@ -182,7 +182,7 @@ export default function ShopSettings() {
               <hr className="my-4" />
 
               <div className="d-flex justify-content-end">
-                <button type="submit" className="btn btn-primary btn-lg" disabled={saving}>
+                <button type="submit" className="btn btn-primary px-4" disabled={saving}>
                   {saving ? (
                     <>
                       <span className="spinner-border spinner-border-sm me-2" role="status"></span>

@@ -40,7 +40,7 @@ export default function StaffManagement() {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const [itemsPerPage, setItemsPerPage] = useState(8);
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -202,7 +202,6 @@ export default function StaffManagement() {
   });
 
   // Pagination logic
-  const totalPages = Math.ceil(filteredStaff.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentStaff = filteredStaff.slice(indexOfFirstItem, indexOfLastItem);
@@ -295,118 +294,207 @@ export default function StaffManagement() {
               <p className="text-muted small">Try adjusting your search criteria or add a new staff member</p>
             </div>
           ) : (
-            <div className="table-responsive">
-              <table className="table table-hover align-middle mb-0">
-                <thead className="table-light">
-                  <tr>
-                    <th className="ps-4">Staff Member</th>
-                    <th>Mobile</th>
-                    <th>Role</th>
-                    <th>Permissions Granted</th>
-                    <th>Status</th>
-                    <th className="text-end pe-4">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentStaff.map((staff) => {
-                    const permList = Array.isArray(staff.permissions)
-                      ? staff.permissions
-                      : DEFAULT_ROLE_PRESETS[staff.role] || [];
+            <>
+              {/* Desktop Table View */}
+              <div className="table-responsive d-none d-md-block">
+                <table className="table table-hover align-middle mb-0">
+                  <thead className="table-light">
+                    <tr>
+                      <th className="ps-4">Staff Member</th>
+                      <th>Mobile</th>
+                      <th>Role</th>
+                      <th>Permissions Granted</th>
+                      <th>Status</th>
+                      <th className="text-end pe-4">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentStaff.map((staff) => {
+                      const permList = Array.isArray(staff.permissions)
+                        ? staff.permissions
+                        : DEFAULT_ROLE_PRESETS[staff.role] || [];
 
-                    return (
-                      <tr key={staff.id}>
-                        <td className="ps-4">
+                      return (
+                        <tr key={staff.id}>
+                          <td className="ps-4">
+                            <div className="d-flex align-items-center">
+                              <div
+                                className="rounded-circle bg-dark text-white fw-bold d-flex align-items-center justify-content-center me-3 shadow-sm"
+                                style={{ width: '40px', height: '40px', fontSize: '0.9rem', background: 'linear-gradient(135deg, #0f172a 0%, #2563eb 100%)' }}
+                              >
+                                {staff.name.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <div className="fw-bold text-dark">{staff.name}</div>
+                                <div className="text-muted small">{staff.email}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            {staff.mobile ? (
+                              <span className="small text-dark font-monospace">{staff.mobile}</span>
+                            ) : (
+                              <span className="text-muted small">—</span>
+                            )}
+                          </td>
+                          <td>
+                            <span className="fw-bold text-dark">
+                              {staff.role || 'Staff'}
+                            </span>
+                          </td>
+                          <td>
+                            <div style={{ maxWidth: '380px' }}>
+                              {staff.role === 'Owner' ? (
+                                <span className="text-success fw-semibold small">
+                                  <i className="bi bi-shield-check me-1"></i>All Permissions (Full Admin)
+                                </span>
+                              ) : (
+                                <span className="text-secondary small leading-normal">
+                                  {permList.map((p) => {
+                                    const cfg = PERMISSION_CONFIG.find((c) => c.key === p);
+                                    return cfg ? cfg.label : p;
+                                  }).join(', ')}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td>
+                            {staff.status === 'active' ? (
+                              <span className="text-success fw-semibold small">
+                                <i className="bi bi-check-circle-fill me-1"></i>Active
+                              </span>
+                            ) : (
+                              <span className="text-danger fw-semibold small">
+                                <i className="bi bi-dash-circle-fill me-1"></i>Inactive
+                              </span>
+                            )}
+                          </td>
+                          <td className="text-end pe-4">
+                            <div className="d-inline-flex align-items-center">
+                              <button
+                                className="text-primary fs-5 p-1 me-2 border-0 bg-transparent"
+                                title="Edit Staff Account"
+                                onClick={() => handleOpenEditModal(staff)}
+                              >
+                                <i className="bi bi-pencil-square"></i>
+                              </button>
+
+                              {staff.role !== 'Owner' && (
+                                <button
+                                  className={`fs-5 p-1 border-0 bg-transparent ${staff.status === 'active' ? 'text-danger' : 'text-success'}`}
+                                  title={staff.status === 'active' ? 'Deactivate Account' : 'Activate Account'}
+                                  onClick={() => setDeactivateTarget(staff)}
+                                >
+                                  <i className={`bi ${staff.status === 'active' ? 'bi-person-x' : 'bi-person-check'}`}></i>
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Cards View */}
+              <div className="d-block d-md-none p-3">
+                {currentStaff.map((staff) => {
+                  const permList = Array.isArray(staff.permissions)
+                    ? staff.permissions
+                    : DEFAULT_ROLE_PRESETS[staff.role] || [];
+
+                  return (
+                    <div key={staff.id} className="card border mb-3 shadow-sm rounded-3">
+                      <div className="card-body p-3">
+                        <div className="d-flex align-items-center justify-content-between mb-2">
                           <div className="d-flex align-items-center">
                             <div
-                              className="rounded-circle bg-dark text-white fw-bold d-flex align-items-center justify-content-center me-3 shadow-sm"
-                              style={{ width: '40px', height: '40px', fontSize: '0.9rem', background: 'linear-gradient(135deg, #0f172a 0%, #2563eb 100%)' }}
+                              className="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center me-2 shadow-sm"
+                              style={{ width: '38px', height: '38px', fontSize: '0.85rem', background: 'linear-gradient(135deg, #0f172a 0%, #2563eb 100%)' }}
                             >
                               {staff.name.charAt(0).toUpperCase()}
                             </div>
                             <div>
-                              <div className="fw-bold text-dark">{staff.name}</div>
-                              <div className="text-muted small">{staff.email}</div>
+                              <h6 className="fw-bold text-dark mb-0">{staff.name}</h6>
+                              <small className="text-muted d-block">{staff.email}</small>
                             </div>
                           </div>
-                        </td>
-                        <td>
-                          {staff.mobile ? (
-                            <span className="small text-dark font-monospace">{staff.mobile}</span>
-                          ) : (
-                            <span className="text-muted small">—</span>
-                          )}
-                        </td>
-                        <td>
-                          <span className="fw-bold text-dark">
-                            {staff.role || 'Staff'}
-                          </span>
-                        </td>
-                        <td>
-                          <div style={{ maxWidth: '380px' }}>
-                            {staff.role === 'Owner' ? (
-                              <span className="text-success fw-semibold small">
-                                <i className="bi bi-shield-check me-1"></i>All Permissions (Full Admin)
-                              </span>
-                            ) : (
-                              <span className="text-secondary small leading-normal">
-                                {permList.map((p) => {
-                                  const cfg = PERMISSION_CONFIG.find((c) => c.key === p);
-                                  return cfg ? cfg.label : p;
-                                }).join(', ')}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td>
                           {staff.status === 'active' ? (
-                            <span className="text-success fw-semibold small">
-                              <i className="bi bi-check-circle-fill me-1"></i>Active
+                            <span className="badge bg-success-subtle text-success border border-success-subtle">
+                              Active
                             </span>
                           ) : (
-                            <span className="text-danger fw-semibold small">
-                              <i className="bi bi-dash-circle-fill me-1"></i>Inactive
+                            <span className="badge bg-danger-subtle text-danger border border-danger-subtle">
+                              Inactive
                             </span>
                           )}
-                        </td>
-                        <td className="text-end pe-4">
-                          <div className="d-inline-flex align-items-center">
-                            <button
-                              className="text-primary fs-5 p-1 me-2 border-0 bg-transparent"
-                              title="Edit Staff Account"
-                              onClick={() => handleOpenEditModal(staff)}
-                            >
-                              <i className="bi bi-pencil-square"></i>
-                            </button>
+                        </div>
 
-                            {staff.role !== 'Owner' && (
-                              <button
-                                className={`fs-5 p-1 border-0 bg-transparent ${staff.status === 'active' ? 'text-danger' : 'text-success'}`}
-                                title={staff.status === 'active' ? 'Deactivate Account' : 'Activate Account'}
-                                onClick={() => setDeactivateTarget(staff)}
-                              >
-                                <i className={`bi ${staff.status === 'active' ? 'bi-person-x' : 'bi-person-check'}`}></i>
-                              </button>
-                            )}
+                        <div className="row g-2 my-2 py-2 border-top border-bottom small">
+                          <div className="col-6">
+                            <span className="text-muted d-block">Role:</span>
+                            <strong className="text-dark">{staff.role || 'Staff'}</strong>
                           </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                          <div className="col-6">
+                            <span className="text-muted d-block">Mobile:</span>
+                            <span className="font-monospace text-dark">{staff.mobile || '—'}</span>
+                          </div>
+                        </div>
+
+                        <div className="mb-3">
+                          <small className="text-muted d-block mb-1 fw-semibold">Permissions:</small>
+                          {staff.role === 'Owner' ? (
+                            <span className="badge bg-success-subtle text-success border border-success-subtle">
+                              <i className="bi bi-shield-check me-1"></i>All Permissions (Full Admin)
+                            </span>
+                          ) : (
+                            <div className="d-flex flex-wrap gap-1">
+                              {permList.map((p) => {
+                                const cfg = PERMISSION_CONFIG.find((c) => c.key === p);
+                                return (
+                                  <span key={p} className="badge bg-light text-secondary border">
+                                    {cfg ? cfg.label : p}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="d-flex justify-content-end gap-2 border-top pt-2">
+                          <button
+                            className="btn btn-sm btn-outline-primary"
+                            onClick={() => handleOpenEditModal(staff)}
+                          >
+                            <i className="bi bi-pencil-square me-1"></i> Edit
+                          </button>
+                          {staff.role !== 'Owner' && (
+                            <button
+                              className={`btn btn-sm ${staff.status === 'active' ? 'btn-outline-danger' : 'btn-outline-success'}`}
+                              onClick={() => setDeactivateTarget(staff)}
+                            >
+                              <i className={`bi ${staff.status === 'active' ? 'bi-person-x' : 'bi-person-check'} me-1`}></i>
+                              {staff.status === 'active' ? 'Deactivate' : 'Activate'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
 
           {/* Pagination Component */}
-          {filteredStaff.length > itemsPerPage && (
-            <div className="p-3 border-top">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={(page) => setCurrentPage(page)}
-              />
-            </div>
-          )}
+          <Pagination
+            currentPage={currentPage}
+            totalItems={filteredStaff.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={setItemsPerPage}
+          />
         </div>
       </div>
 

@@ -37,8 +37,8 @@ export default function Pagination({
           <div className="d-flex align-items-center gap-1 small text-muted ms-2">
             <span>Show</span>
             <select
-              className="form-select form-select-sm py-0 px-2"
-              style={{ width: 'auto', fontSize: '0.8rem' }}
+              className="form-select form-select-sm py-1 ps-2 pe-4"
+              style={{ width: '70px', fontSize: '0.8rem' }}
               value={itemsPerPage}
               onChange={(e) => {
                 onItemsPerPageChange(Number(e.target.value));

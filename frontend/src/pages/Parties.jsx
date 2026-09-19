@@ -192,7 +192,8 @@ export default function Parties() {
               />
             </div>
           </div>
-          <div className="table-responsive">
+          {/* Desktop Table View */}
+          <div className="table-responsive d-none d-md-block">
             <table className="table table-hover table-sm mb-0 align-middle">
               <thead className="table-light">
                 <tr>
@@ -233,6 +234,50 @@ export default function Parties() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Cards View */}
+          <div className="d-block d-md-none p-3">
+            {parties.length === 0 ? (
+              <div className="text-center text-muted py-4">No parties registered yet</div>
+            ) : (
+              paginatedParties.map((p) => (
+                <div key={p.id} className="card border mb-3 shadow-sm rounded-3">
+                  <div className="card-body p-3">
+                    <div className="d-flex justify-content-between align-items-start mb-2">
+                      <div>
+                        <h6 className="fw-bold text-dark mb-0">{p.name}</h6>
+                        {p.email && <small className="text-muted d-block">{p.email}</small>}
+                      </div>
+                      <span className="badge bg-light text-dark border">{p.state}</span>
+                    </div>
+
+                    <div className="row g-2 my-2 py-2 border-top border-bottom small">
+                      <div className="col-6">
+                        <span className="text-muted d-block">Mobile:</span>
+                        <span className="fw-semibold text-dark font-monospace">{p.mobile || '—'}</span>
+                      </div>
+                      <div className="col-6">
+                        <span className="text-muted d-block">GSTIN:</span>
+                        {p.gstin ? <code className="text-dark">{p.gstin}</code> : <span className="text-muted">—</span>}
+                      </div>
+                    </div>
+
+                    <div className="d-flex justify-content-end gap-2 border-top pt-2">
+                      <button className="btn btn-sm btn-outline-info" onClick={() => viewHistory(p)}>
+                        <i className="bi bi-clock-history me-1"></i> Invoices
+                      </button>
+                      <button className="btn btn-sm btn-outline-primary" onClick={() => handleEdit(p)}>
+                        <i className="bi bi-pencil-square me-1"></i> Edit
+                      </button>
+                      <button className="btn btn-sm btn-outline-danger" onClick={() => setDeleteTarget(p)}>
+                        <i className="bi bi-trash3 me-1"></i> Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           <Pagination

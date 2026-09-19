@@ -251,7 +251,7 @@ export default function CreateBill() {
           <div className="row g-3">
             <div className="col-md-6">
               <label className="form-label fw-semibold">Select Customer / Party *</label>
-              <select className="form-select form-select-lg" value={partyId} onChange={(e) => setPartyId(e.target.value)}>
+              <select className="form-select" value={partyId} onChange={(e) => setPartyId(e.target.value)}>
                 <option value="">-- Choose Party --</option>
                 {parties.map((p) => (
                   <option key={p.id} value={p.id}>{p.name} ({p.mobile}) - {p.state}</option>

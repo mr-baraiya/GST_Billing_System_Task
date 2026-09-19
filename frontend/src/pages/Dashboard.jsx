@@ -169,7 +169,7 @@ export default function Dashboard() {
           <div className="text-muted small">Real-time revenue metrics, GST tax collections, and sales breakdown.</div>
         </div>
         <div>
-          <Link to="/create-bill" className="btn btn-primary btn-lg shadow-sm">
+          <Link to="/create-bill" className="btn btn-primary px-3 shadow-sm">
             <i className="bi bi-plus-circle me-2"></i> Create GST Bill
           </Link>
         </div>

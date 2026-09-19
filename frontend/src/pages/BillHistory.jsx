@@ -122,7 +122,8 @@ export default function BillHistory() {
 
       {/* Bills Table Card */}
       <div className="card shadow-sm">
-        <div className="table-responsive">
+        {/* Desktop Table View */}
+        <div className="table-responsive d-none d-md-block">
           <table className="table table-hover table-sm mb-0 align-middle">
             <thead className="table-dark">
               <tr>
@@ -173,6 +174,60 @@ export default function BillHistory() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Cards View */}
+        <div className="d-block d-md-none p-3">
+          {loading ? (
+            <div className="text-center py-4"><div className="spinner-border text-primary spinner-border-sm"></div></div>
+          ) : bills.length === 0 ? (
+            <div className="text-center text-muted py-4">No matching invoices found</div>
+          ) : (
+            paginatedBills.map((b) => (
+              <div key={b.id} className="card border mb-3 shadow-sm rounded-3">
+                <div className="card-body p-3">
+                  <div className="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                      <Link to={`/bills/${b.id}`} className="fw-bold fs-6 text-decoration-none text-primary">
+                        {b.invoice_no}
+                      </Link>
+                      <small className="text-muted d-block">{new Date(b.invoice_date).toLocaleDateString('en-IN')}</small>
+                    </div>
+                    <span className={`badge bg-${b.status === 'Paid' ? 'success' : b.status === 'Partial' ? 'warning' : 'danger'}`}>
+                      {b.status}
+                    </span>
+                  </div>
+
+                  <div className="my-2 py-2 border-top border-bottom">
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <span className="fw-semibold text-dark">{b.party_name}</span>
+                      <span className="badge bg-light text-dark border">{b.party_state}</span>
+                    </div>
+                    <div className="d-flex justify-content-between align-items-center text-muted small">
+                      <span>Tax Type: <span className="badge bg-secondary">{b.tax_type}</span></span>
+                    </div>
+                  </div>
+
+                  <div className="d-flex justify-content-between align-items-center mb-3 small">
+                    <div>
+                      <span className="text-muted d-block">Subtotal: ₹{Number(b.subtotal).toFixed(2)}</span>
+                      <span className="text-muted d-block">Tax: ₹{Number(b.total_tax).toFixed(2)}</span>
+                    </div>
+                    <div className="text-end">
+                      <span className="text-muted d-block small">Grand Total</span>
+                      <strong className="fs-5 text-success">₹{Number(b.grand_total).toFixed(2)}</strong>
+                    </div>
+                  </div>
+
+                  <div className="d-flex justify-content-end border-top pt-2">
+                    <Link to={`/bills/${b.id}`} className="btn btn-sm btn-primary w-100">
+                      <i className="bi bi-eye me-1"></i> View Invoice Details
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         <Pagination

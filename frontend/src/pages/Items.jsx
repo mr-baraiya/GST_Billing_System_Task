@@ -200,7 +200,8 @@ export default function Items() {
               />
             </div>
           </div>
-          <div className="table-responsive">
+          {/* Desktop Table View */}
+          <div className="table-responsive d-none d-md-block">
             <table className="table table-hover table-sm mb-0 align-middle">
               <thead className="table-light">
                 <tr>
@@ -239,6 +240,46 @@ export default function Items() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Cards View */}
+          <div className="d-block d-md-none p-3">
+            {items.length === 0 ? (
+              <div className="text-center text-muted py-4">No items added to catalog yet</div>
+            ) : (
+              paginatedItems.map((it) => (
+                <div key={it.id} className="card border mb-3 shadow-sm rounded-3">
+                  <div className="card-body p-3">
+                    <div className="d-flex justify-content-between align-items-start mb-2">
+                      <h6 className="fw-bold text-dark mb-0">{it.name}</h6>
+                      <span className={`badge ${getSlabColor(it.gst_percent)}`}>
+                        {Number(it.gst_percent)}% GST
+                      </span>
+                    </div>
+
+                    <div className="row g-2 my-2 py-2 border-top border-bottom small">
+                      <div className="col-6">
+                        <span className="text-muted d-block">Unit Price:</span>
+                        <span className="fw-bold text-primary fs-6">₹{Number(it.price).toFixed(2)}</span>
+                      </div>
+                      <div className="col-6">
+                        <span className="text-muted d-block">HSN Code:</span>
+                        {it.hsn_code ? <code className="text-dark">{it.hsn_code}</code> : <span className="text-muted">—</span>}
+                      </div>
+                    </div>
+
+                    <div className="d-flex justify-content-end gap-2 border-top pt-2">
+                      <button className="btn btn-sm btn-outline-primary" onClick={() => handleEdit(it)}>
+                        <i className="bi bi-pencil-square me-1"></i> Edit
+                      </button>
+                      <button className="btn btn-sm btn-outline-danger" onClick={() => setDeleteTarget(it)}>
+                        <i className="bi bi-trash3 me-1"></i> Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           <Pagination
