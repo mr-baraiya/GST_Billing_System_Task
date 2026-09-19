@@ -101,4 +101,57 @@ async function sendInvoiceEmail(toEmail, bill, pdfBuffer, shopName) {
   return await transporter.sendMail(mailOptions);
 }
 
-module.exports = { sendPasswordResetEmail, sendInvoiceEmail };
+/**
+ * Send contact form submission email to Admin.
+ */
+async function sendContactNotification(name, email, phone, subject, message) {
+  const adminEmail = process.env.SHOP_EMAIL || process.env.SMTP_USER || 'vvbaraiya32@gmail.com';
+  const mailOptions = {
+    from: `"${name} (GSTKhata Contact Lead)" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+    replyTo: email,
+    to: adminEmail,
+    subject: `New Lead Inquiry: ${subject || 'Contact Form Submission'}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+        <div style="background-color: #0f172a; padding: 20px; text-align: center; color: #ffffff;">
+          <h2 style="margin: 0; font-size: 20px;">GSTKhata Contact Inquiry</h2>
+          <p style="margin: 5px 0 0 0; opacity: 0.8; font-size: 13px;">New message submitted via public website</p>
+        </div>
+        <div style="padding: 24px; color: #334155;">
+          <h3 style="margin-top: 0; color: #2563eb;">Lead Details</h3>
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px;">
+            <tr>
+              <td style="padding: 6px 0; color: #64748b; width: 120px;"><strong>Full Name:</strong></td>
+              <td style="padding: 6px 0; font-weight: bold;">${name}</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; color: #64748b;"><strong>Email:</strong></td>
+              <td style="padding: 6px 0;"><a href="mailto:${email}" style="color: #2563eb;">${email}</a></td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; color: #64748b;"><strong>Phone:</strong></td>
+              <td style="padding: 6px 0;">${phone || 'N/A'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; color: #64748b;"><strong>Subject:</strong></td>
+              <td style="padding: 6px 0;">${subject || 'General Inquiry'}</td>
+            </tr>
+          </table>
+
+          <div style="background-color: #f8fafc; border-left: 4px solid #2563eb; padding: 16px; border-radius: 4px;">
+            <p style="margin: 0 0 8px 0; font-weight: bold; color: #1e293b;">Message Content:</p>
+            <p style="margin: 0; white-space: pre-wrap; color: #334155; font-size: 14px; line-height: 1.6;">${message}</p>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+          <p style="font-size: 12px; color: #94a3b8; margin: 0;">This email was automatically generated from the GSTKhata software contact page.</p>
+        </div>
+      </div>
+    `,
+  };
+
+  return await transporter.sendMail(mailOptions);
+}
+
+module.exports = { sendPasswordResetEmail, sendInvoiceEmail, sendContactNotification };
+

@@ -19,7 +19,7 @@ export default function Sidebar({ shopInfo }) {
       <div className="sidebar-menu">
         <div className="menu-category">MAIN MENU</div>
         {hasPermission('dashboard') && (
-          <NavLink to="/" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+          <NavLink to="/dashboard" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <i className="bi bi-grid-1x2-fill"></i>
             <span>Dashboard</span>
           </NavLink>

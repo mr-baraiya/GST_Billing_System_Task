@@ -10,6 +10,7 @@ const billRoutes = require('./routes/billRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const shopRoutes = require('./routes/shopRoutes');
 const userRoutes = require('./routes/userRoutes');
+const contactRoutes = require('./routes/contactRoutes');
 
 const app = express();
 
@@ -49,6 +50,7 @@ app.use('/api/bills', billRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/shop', shopRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/contact', contactRoutes);
 
 // 404 handler
 app.use((req, res) => res.status(404).json({ error: 'Route not found' }));

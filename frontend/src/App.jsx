@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Sidebar from './components/Sidebar.jsx';
@@ -16,6 +16,10 @@ import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
+import LandingPage from './pages/LandingPage.jsx';
+import FeaturesPage from './pages/FeaturesPage.jsx';
+import AboutPage from './pages/AboutPage.jsx';
+import ContactPage from './pages/ContactPage.jsx';
 import api from './api/axios';
 
 function ProtectedLayout() {
@@ -34,7 +38,8 @@ function ProtectedLayout() {
         <Header shopInfo={shopInfo} />
         <main className="main-content">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/parties" element={<Parties />} />
             <Route path="/items" element={<Items />} />
             <Route path="/create-bill" element={<CreateBill />} />
@@ -53,7 +58,13 @@ export default function App() {
   return (
     <AuthProvider>
       <Routes>
-        {/* Public Authentication Routes */}
+        {/* Public SaaS Pages */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/features" element={<FeaturesPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+
+        {/* Authentication Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
