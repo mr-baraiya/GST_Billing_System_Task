@@ -23,7 +23,7 @@ export default function Parties() {
 
   // Pagination for main parties table
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   // History Modal State & Pagination
   const [selectedPartyHistory, setSelectedPartyHistory] = useState(null);
@@ -214,6 +214,7 @@ export default function Parties() {
             totalItems={parties.length}
             itemsPerPage={itemsPerPage}
             onPageChange={(page) => setCurrentPage(page)}
+            onItemsPerPageChange={(size) => setItemsPerPage(size)}
           />
         </div>
       </div>

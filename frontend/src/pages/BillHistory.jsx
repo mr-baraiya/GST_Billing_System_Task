@@ -13,7 +13,7 @@ export default function BillHistory() {
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   const loadBills = () => {
     setLoading(true);
@@ -180,6 +180,7 @@ export default function BillHistory() {
           totalItems={bills.length}
           itemsPerPage={itemsPerPage}
           onPageChange={(page) => setCurrentPage(page)}
+          onItemsPerPageChange={(size) => setItemsPerPage(size)}
         />
       </div>
     </div>

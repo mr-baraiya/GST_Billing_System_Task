@@ -14,7 +14,7 @@ export default function Items() {
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   const load = () => {
     api.get('/items', { params: search ? { search } : {} })
@@ -223,6 +223,7 @@ export default function Items() {
             totalItems={items.length}
             itemsPerPage={itemsPerPage}
             onPageChange={(page) => setCurrentPage(page)}
+            onItemsPerPageChange={(size) => setItemsPerPage(size)}
           />
         </div>
       </div>
