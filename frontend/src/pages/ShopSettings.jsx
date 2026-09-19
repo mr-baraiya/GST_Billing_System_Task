@@ -10,6 +10,8 @@ const INDIAN_STATES = [
   'Jammu & Kashmir', 'Ladakh'
 ];
 
+import Validator from '../utils/validator';
+
 export default function ShopSettings() {
   const [form, setForm] = useState({
     shop_name: '',
@@ -42,6 +44,20 @@ export default function ShopSettings() {
     e.preventDefault();
     setSaving(true);
     setMessage({ type: '', text: '' });
+
+    // Reusable Validator check
+    const validation = Validator.validate(form, {
+      shop_name: { required: true, label: 'Shop / Business Name' },
+      email: { email: true, label: 'Shop Email' },
+      phone: { mobile: true, label: 'Shop Phone Number' },
+      gstin: { gstin: true, label: 'GSTIN' },
+    });
+
+    if (!validation.isValid) {
+      setSaving(false);
+      return setMessage({ type: 'danger', text: Object.values(validation.errors)[0] });
+    }
+
     try {
       const res = await api.put('/shop', form);
       setForm(res.data);

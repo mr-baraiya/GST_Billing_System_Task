@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+import Validator from '../utils/validator';
+
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -18,6 +20,17 @@ export default function Login() {
     e.preventDefault();
     setError('');
     setSubmitting(true);
+
+    // Reusable Validator check
+    const validation = Validator.validate({ email, password }, {
+      email: { required: true, email: true, label: 'Email Address' },
+      password: { required: true, label: 'Password' },
+    });
+
+    if (!validation.isValid) {
+      setSubmitting(false);
+      return setError(Object.values(validation.errors)[0]);
+    }
 
     try {
       await login(email, password);

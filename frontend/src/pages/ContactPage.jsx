@@ -3,6 +3,8 @@ import api from '../api/axios';
 import NavbarPublic from '../components/NavbarPublic';
 import FooterPublic from '../components/FooterPublic';
 
+import Validator from '../utils/validator';
+
 export default function ContactPage() {
   const [form, setForm] = useState({
     name: '',
@@ -23,6 +25,19 @@ export default function ContactPage() {
     setLoading(true);
     setSuccessMessage('');
     setErrorMessage('');
+
+    // Reusable Validator check
+    const validation = Validator.validate(form, {
+      name: { required: true, label: 'Full Name' },
+      email: { required: true, email: true, label: 'Email Address' },
+      phone: { mobile: true, label: 'Phone Number' },
+      message: { required: true, label: 'Message' },
+    });
+
+    if (!validation.isValid) {
+      setLoading(false);
+      return setErrorMessage(Object.values(validation.errors)[0]);
+    }
 
     try {
       const res = await api.post('/contact', form);
@@ -153,11 +168,11 @@ export default function ContactPage() {
                         {loading ? (
                           <>
                             <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                            Sending Mail to Admin...
+                            Submitting...
                           </>
                         ) : (
                           <>
-                            <i className="bi bi-paperplane me-2"></i> Submit Inquiry to Admin
+                            <i className="bi bi-send me-2"></i> Submit
                           </>
                         )}
                       </button>

@@ -14,6 +14,86 @@ const INDIAN_STATES = [
 
 let lineKey = 0;
 
+function CatalogItemPicker({ line, items, onSelect, onChangeName }) {
+  const [open, setOpen] = useState(false);
+
+  const filteredItems = items.filter((it) =>
+    it.name.toLowerCase().includes((line.name || '').toLowerCase())
+  );
+
+  return (
+    <div
+      className="position-relative"
+      onFocus={() => setOpen(true)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) {
+          setOpen(false);
+        }
+      }}
+    >
+      <div className="input-group input-group-sm">
+        <input
+          type="text"
+          className="form-control form-control-sm"
+          placeholder="Type or select item from catalog..."
+          value={line.name}
+          onChange={(e) => {
+            onChangeName(e.target.value);
+            setOpen(true);
+          }}
+        />
+        <button
+          tabIndex="-1"
+          type="button"
+          className="btn btn-outline-secondary px-2"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => setOpen((prev) => !prev)}
+        >
+          <i className={`bi bi-chevron-${open ? 'up' : 'down'}`}></i>
+        </button>
+      </div>
+
+      {open && filteredItems.length > 0 && (
+        <div
+          className="position-absolute start-0 bg-white border rounded-3 shadow-lg overflow-auto py-1"
+          style={{
+            zIndex: 1050,
+            maxHeight: '240px',
+            top: '100%',
+            left: 0,
+            minWidth: '320px',
+            marginTop: '4px'
+          }}
+        >
+          {filteredItems.map((it) => (
+            <div
+              key={it.id}
+              className="px-3 py-2 border-bottom text-start cursor-pointer hover-bg-light"
+              style={{ transition: 'background 0.15s' }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                onSelect(it);
+                setOpen(false);
+              }}
+            >
+              <div className="fw-bold text-dark small">{it.name}</div>
+              <div className="d-flex align-items-center gap-2 mt-1" style={{ fontSize: '0.75rem' }}>
+                <span className="text-primary fw-semibold">₹{Number(it.price).toFixed(2)}</span>
+                <span className="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle py-0.5">
+                  {Number(it.gst_percent)}% GST
+                </span>
+                {it.hsn_code && (
+                  <span className="text-muted font-monospace">HSN: {it.hsn_code}</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function CreateBill() {
   const navigate = useNavigate();
   const [shop, setShop] = useState({ state: 'Gujarat', shop_name: '' });
@@ -204,14 +284,14 @@ export default function CreateBill() {
       </div>
 
       {/* Line Items Table Card */}
-      <div className="card shadow-sm mb-4">
+      <div className="card shadow-sm mb-4" style={{ overflow: 'visible' }}>
         <div className="card-header bg-light d-flex justify-content-between align-items-center">
           <span className="fw-bold"><i className="bi bi-cart3 me-2"></i>Invoice Line Items</span>
           <button className="btn btn-sm btn-success" onClick={addLine}>
             <i className="bi bi-plus-lg me-1"></i> Add Line Item
           </button>
         </div>
-        <div className="table-responsive">
+        <div className="table-responsive" style={{ overflow: 'visible' }}>
           <table className="table table-bordered mb-0 align-middle">
             <thead className="table-secondary">
               <tr>
@@ -234,21 +314,20 @@ export default function CreateBill() {
                 return (
                   <tr key={l.key}>
                     <td>
-                      <select
-                        className="form-select form-select-sm mb-1"
-                        value={l.itemId}
-                        onChange={(e) => updateLine(l.key, 'itemId', e.target.value)}
-                      >
-                        <option value="">-- select from catalog --</option>
-                        {items.map((it) => (
-                          <option key={it.id} value={it.id}>{it.name} (₹{it.price}, {it.gst_percent}%)</option>
-                        ))}
-                      </select>
-                      <input
-                        className="form-control form-control-sm"
-                        placeholder="Enter item name..."
-                        value={l.name}
-                        onChange={(e) => updateLine(l.key, 'name', e.target.value)}
+                      <CatalogItemPicker
+                        line={l}
+                        items={items}
+                        onSelect={(chosen) => {
+                          setLines(lines.map((line) => line.key === l.key ? {
+                            ...line,
+                            itemId: chosen.id,
+                            name: chosen.name,
+                            hsnCode: chosen.hsn_code || '',
+                            rate: chosen.price,
+                            gstPercent: chosen.gst_percent
+                          } : line));
+                        }}
+                        onChangeName={(newName) => updateLine(l.key, 'name', newName)}
                       />
                     </td>
                     <td>

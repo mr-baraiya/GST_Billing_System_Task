@@ -11,9 +11,7 @@ export default function NavbarPublic() {
     <nav className="navbar navbar-expand-lg sticky-top bg-white border-bottom shadow-sm py-3">
       <div className="container">
         <Link to="/" className="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark fs-4">
-          <div className="bg-primary text-white rounded-3 p-2 d-flex align-items-center justify-content-center" style={{ width: 38, height: 38 }}>
-            <i className="bi bi-receipt fs-5"></i>
-          </div>
+          <img src="/gstkhata_icon.png" alt="GSTKhata Logo" style={{ height: '38px', width: '38px', objectFit: 'contain' }} />
           <span className="tracking-tight">GST<span className="text-primary">Khata</span></span>
         </Link>
 

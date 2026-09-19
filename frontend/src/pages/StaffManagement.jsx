@@ -3,6 +3,9 @@ import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import Pagination from '../components/Pagination';
 
+import Validator from '../utils/validator';
+import DeleteConfirmModal from '../components/DeleteConfirmModal';
+
 const PERMISSION_CONFIG = [
   { key: 'dashboard', label: 'Dashboard Overview', desc: 'Access sales metrics & dashboard widgets' },
   { key: 'parties', label: 'Parties Directory', desc: 'Create, edit & view customer records' },
@@ -30,6 +33,10 @@ export default function StaffManagement() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
+
+  // Deactivate Modal State
+  const [deactivateTarget, setDeactivateTarget] = useState(null);
+  const [statusLoading, setStatusLoading] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -141,8 +148,16 @@ export default function StaffManagement() {
     e.preventDefault();
     setFormMsg({ type: '', text: '' });
 
-    if (!editingStaff && !formData.password) {
-      return setFormMsg({ type: 'danger', text: 'Password is required for new staff accounts' });
+    // Validator check
+    const validation = Validator.validate(formData, {
+      name: { required: true, label: 'Full Name' },
+      email: { required: true, email: true, label: 'Email Address' },
+      mobile: { mobile: true, label: 'Mobile Number' },
+      ...(editingStaff ? {} : { password: { required: true, minLength: 6, label: 'Password' } }),
+    });
+
+    if (!validation.isValid) {
+      return setFormMsg({ type: 'danger', text: Object.values(validation.errors)[0] });
     }
 
     setSubmitting(true);
@@ -162,13 +177,17 @@ export default function StaffManagement() {
     }
   };
 
-  const handleToggleStatus = async (staff) => {
-    if (staff.role === 'Owner') return;
+  const handleConfirmToggleStatus = async () => {
+    if (!deactivateTarget) return;
+    setStatusLoading(true);
     try {
-      await api.put(`/users/${staff.id}/toggle-status`);
+      await api.put(`/users/${deactivateTarget.id}/toggle-status`);
+      setDeactivateTarget(null);
       fetchStaffList();
     } catch (err) {
       alert(err.response?.data?.error || 'Failed to update status');
+    } finally {
+      setStatusLoading(false);
     }
   };
 
@@ -318,33 +337,34 @@ export default function StaffManagement() {
                           )}
                         </td>
                         <td>
-                          <span className={`badge px-2.5 py-1.5 rounded-pill small ${getRoleBadgeClass(staff.role)}`}>
+                          <span className="fw-bold text-dark">
                             {staff.role || 'Staff'}
                           </span>
                         </td>
                         <td>
-                          <div className="d-flex flex-wrap gap-1" style={{ maxWidth: '320px' }}>
+                          <div style={{ maxWidth: '380px' }}>
                             {staff.role === 'Owner' ? (
-                              <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 small">
+                              <span className="text-success fw-semibold small">
                                 <i className="bi bi-shield-check me-1"></i>All Permissions (Full Admin)
                               </span>
                             ) : (
-                              permList.map((p) => (
-                                <span key={p} className="badge bg-light text-secondary border small" style={{ fontSize: '0.675rem' }}>
-                                  {p}
-                                </span>
-                              ))
+                              <span className="text-secondary small leading-normal">
+                                {permList.map((p) => {
+                                  const cfg = PERMISSION_CONFIG.find((c) => c.key === p);
+                                  return cfg ? cfg.label : p;
+                                }).join(', ')}
+                              </span>
                             )}
                           </div>
                         </td>
                         <td>
                           {staff.status === 'active' ? (
-                            <span className="badge bg-success-subtle text-success border border-success-subtle">
-                              <i className="bi bi-check-circle me-1"></i>Active
+                            <span className="text-success fw-semibold small">
+                              <i className="bi bi-check-circle-fill me-1"></i>Active
                             </span>
                           ) : (
-                            <span className="badge bg-danger-subtle text-danger border border-danger-subtle">
-                              <i className="bi bi-dash-circle me-1"></i>Inactive
+                            <span className="text-danger fw-semibold small">
+                              <i className="bi bi-dash-circle-fill me-1"></i>Inactive
                             </span>
                           )}
                         </td>
@@ -362,7 +382,7 @@ export default function StaffManagement() {
                               <button
                                 className={`fs-5 p-1 border-0 bg-transparent ${staff.status === 'active' ? 'text-danger' : 'text-success'}`}
                                 title={staff.status === 'active' ? 'Deactivate Account' : 'Activate Account'}
-                                onClick={() => handleToggleStatus(staff)}
+                                onClick={() => setDeactivateTarget(staff)}
                               >
                                 <i className={`bi ${staff.status === 'active' ? 'bi-person-x' : 'bi-person-check'}`}></i>
                               </button>
@@ -563,6 +583,18 @@ export default function StaffManagement() {
           </div>
         </div>
       )}
+
+      {/* Reusable Delete / Status Toggle Confirmation Modal */}
+      <DeleteConfirmModal
+        show={Boolean(deactivateTarget)}
+        title={deactivateTarget?.status === 'active' ? 'Deactivate Staff Account' : 'Activate Staff Account'}
+        message={deactivateTarget?.status === 'active' ? 'Are you sure you want to deactivate this staff account?' : 'Re-activate access for this staff member?'}
+        itemName={`${deactivateTarget?.name} (${deactivateTarget?.email})`}
+        onConfirm={handleConfirmToggleStatus}
+        onCancel={() => setDeactivateTarget(null)}
+        loading={statusLoading}
+        confirmBtnText={deactivateTarget?.status === 'active' ? 'Deactivate Account' : 'Activate Account'}
+      />
     </div>
   );
 }

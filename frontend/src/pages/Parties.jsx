@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
+import Validator from '../utils/validator';
+import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import Pagination from '../components/Pagination';
 
 const INDIAN_STATES = [
@@ -20,6 +22,10 @@ export default function Parties() {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState('');
+
+  // Delete Modal State
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Pagination for main parties table
   const [currentPage, setCurrentPage] = useState(1);
@@ -48,6 +54,20 @@ export default function Parties() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    // Reusable Validator check
+    const validation = Validator.validate(form, {
+      name: { required: true, label: 'Customer / Party Name' },
+      mobile: { required: true, mobile: true, label: 'Mobile Number' },
+      email: { email: true, label: 'Email Address' },
+      gstin: { gstin: true, label: 'GSTIN' },
+    });
+
+    if (!validation.isValid) {
+      const firstErr = Object.values(validation.errors)[0];
+      return setError(firstErr);
+    }
+
     try {
       if (editingId) {
         await api.put(`/parties/${editingId}`, form);
@@ -74,13 +94,17 @@ export default function Parties() {
     });
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this party?')) return;
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleteLoading(true);
     try {
-      await api.delete(`/parties/${id}`);
+      await api.delete(`/parties/${deleteTarget.id}`);
+      setDeleteTarget(null);
       load();
     } catch (err) {
       alert(err.response?.data?.error || 'Failed to delete party');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -192,16 +216,18 @@ export default function Parties() {
                     <td>{p.mobile}</td>
                     <td><span className="badge bg-light text-dark border">{p.state}</span></td>
                     <td>{p.gstin ? <code className="text-dark">{p.gstin}</code> : <span className="text-muted">-</span>}</td>
-                    <td className="text-end">
-                      <button className="text-info fs-5 p-1 me-2 border-0 bg-transparent" title="Bill History" onClick={() => viewHistory(p)}>
-                        <i className="bi bi-clock-history"></i>
-                      </button>
-                      <button className="text-primary fs-5 p-1 me-2 border-0 bg-transparent" title="Edit" onClick={() => handleEdit(p)}>
-                        <i className="bi bi-pencil-square"></i>
-                      </button>
-                      <button className="text-danger fs-5 p-1 border-0 bg-transparent" title="Delete" onClick={() => handleDelete(p.id)}>
-                        <i className="bi bi-trash3"></i>
-                      </button>
+                    <td className="text-end text-nowrap">
+                      <div className="d-inline-flex align-items-center justify-content-end gap-1">
+                        <button className="text-info fs-5 p-1 border-0 bg-transparent" title="Bill History" onClick={() => viewHistory(p)}>
+                          <i className="bi bi-clock-history"></i>
+                        </button>
+                        <button className="text-primary fs-5 p-1 border-0 bg-transparent" title="Edit" onClick={() => handleEdit(p)}>
+                          <i className="bi bi-pencil-square"></i>
+                        </button>
+                        <button className="text-danger fs-5 p-1 border-0 bg-transparent" title="Delete" onClick={() => setDeleteTarget(p)}>
+                          <i className="bi bi-trash3"></i>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -298,6 +324,17 @@ export default function Parties() {
           </div>
         </div>
       )}
+
+      {/* Reusable Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        show={Boolean(deleteTarget)}
+        title="Delete Customer / Party"
+        message="Are you sure you want to delete this customer record?"
+        itemName={deleteTarget?.name}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+        loading={deleteLoading}
+      />
     </div>
   );
 }

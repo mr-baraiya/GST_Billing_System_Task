@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../api/axios';
+import Validator from '../utils/validator';
+import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import Pagination from '../components/Pagination';
 
 const GST_SLABS = [0, 5, 12, 18, 28];
@@ -11,6 +13,10 @@ export default function Items() {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState('');
+
+  // Delete Modal State
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,6 +38,17 @@ export default function Items() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    // Reusable Validator Check
+    const validation = Validator.validate(form, {
+      name: { required: true, label: 'Item / Product Name' },
+      price: { required: true, positive: true, label: 'Unit Price' },
+    });
+
+    if (!validation.isValid) {
+      return setError(Object.values(validation.errors)[0]);
+    }
+
     try {
       const payload = {
         name: form.name,
@@ -63,13 +80,17 @@ export default function Items() {
     });
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this item?')) return;
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleteLoading(true);
     try {
-      await api.delete(`/items/${id}`);
+      await api.delete(`/items/${deleteTarget.id}`);
+      setDeleteTarget(null);
       load();
     } catch (err) {
       alert(err.response?.data?.error || 'Failed to delete item');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -201,16 +222,18 @@ export default function Items() {
                     <td className="text-end fw-semibold">₹{Number(it.price).toFixed(2)}</td>
                     <td>
                       <span className={`badge ${getSlabColor(it.gst_percent)}`}>
-                        {it.gst_percent}% GST
+                        {Number(it.gst_percent)}% GST
                       </span>
                     </td>
-                    <td className="text-end">
-                      <button className="text-primary fs-5 p-1 me-2 border-0 bg-transparent" title="Edit" onClick={() => handleEdit(it)}>
-                        <i className="bi bi-pencil-square"></i>
-                      </button>
-                      <button className="text-danger fs-5 p-1 border-0 bg-transparent" title="Delete" onClick={() => handleDelete(it.id)}>
-                        <i className="bi bi-trash3"></i>
-                      </button>
+                    <td className="text-end text-nowrap">
+                      <div className="d-inline-flex align-items-center justify-content-end gap-1">
+                        <button className="text-primary fs-5 p-1 border-0 bg-transparent" title="Edit" onClick={() => handleEdit(it)}>
+                          <i className="bi bi-pencil-square"></i>
+                        </button>
+                        <button className="text-danger fs-5 p-1 border-0 bg-transparent" title="Delete" onClick={() => setDeleteTarget(it)}>
+                          <i className="bi bi-trash3"></i>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -227,6 +250,17 @@ export default function Items() {
           />
         </div>
       </div>
+
+      {/* Reusable Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        show={Boolean(deleteTarget)}
+        title="Delete Item from Catalog"
+        message="Are you sure you want to delete this product from your catalog?"
+        itemName={deleteTarget?.name}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+        loading={deleteLoading}
+      />
     </div>
   );
 }

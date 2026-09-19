@@ -18,6 +18,14 @@ body {
   min-height: 100vh;
 }
 
+.hover-bg-light:hover {
+  background-color: #f1f5f9 !important;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
 .app-container {
   display: flex;
   min-height: 100vh;
