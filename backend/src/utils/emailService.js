@@ -153,5 +153,46 @@ async function sendContactNotification(name, email, phone, subject, message) {
   return await transporter.sendMail(mailOptions);
 }
 
-module.exports = { sendPasswordResetEmail, sendInvoiceEmail, sendContactNotification };
+/**
+ * Send Login 2FA OTP email to user.
+ */
+async function sendLoginOtpEmail(toEmail, otpCode, userName) {
+  const mailOptions = {
+    from: `"${process.env.SHOP_NAME || 'GSTKhata'}" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+    to: toEmail,
+    subject: `Your Login Verification Code: ${otpCode} - GSTKhata`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+        <div style="background-color: #0f172a; padding: 24px; text-align: center; color: #ffffff;">
+          <h2 style="margin: 0; font-size: 22px; letter-spacing: 0.5px;">GSTKhata</h2>
+          <p style="margin: 6px 0 0 0; opacity: 0.85; font-size: 13px;">Two-Factor Authentication Security</p>
+        </div>
+        <div style="padding: 28px; color: #334155; background-color: #ffffff;">
+          <p style="font-size: 15px; margin-top: 0;">Hello <strong>${userName || 'User'}</strong>,</p>
+          <p style="font-size: 14px; line-height: 1.5;">You are attempting to log into your <strong>GSTKhata</strong> account. Use the 6-digit verification code below to complete your login:</p>
+          
+          <div style="text-align: center; margin: 28px 0; background-color: #f8fafc; border: 2px dashed #2563eb; border-radius: 10px; padding: 20px;">
+            <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: #64748b; margin-bottom: 8px;">Your One-Time Passcode (OTP)</div>
+            <div style="font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #2563eb; font-family: monospace;">${otpCode}</div>
+            <div style="font-size: 12px; color: #ef4444; margin-top: 8px; font-weight: 600;">Valid for 10 minutes only</div>
+          </div>
+
+          <p style="font-size: 13px; color: #64748b; line-height: 1.5;">If you did not initiate this login request, please change your account password immediately to protect your account.</p>
+          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+          <p style="font-size: 12px; color: #94a3b8; margin: 0; text-align: center;">Secured by GSTKhata Two-Factor Authentication System.</p>
+        </div>
+      </div>
+    `,
+  };
+
+  try {
+    return await transporter.sendMail(mailOptions);
+  } catch (err) {
+    console.error('Nodemailer OTP sending note:', err.message);
+    console.log(`[DEV OTP LOG] Verification Code for ${toEmail}: ${otpCode}`);
+    return { devBackup: true };
+  }
+}
+
+module.exports = { sendPasswordResetEmail, sendInvoiceEmail, sendContactNotification, sendLoginOtpEmail };
 

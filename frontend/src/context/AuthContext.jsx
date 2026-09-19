@@ -36,9 +36,21 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const res = await api.post('/auth/login', { email, password });
-    setToken(res.data.token);
-    setUser(res.data.user);
-    localStorage.setItem('gst_token', res.data.token);
+    return res.data;
+  };
+
+  const verifyOtp = async (email, otp) => {
+    const res = await api.post('/auth/verify-otp', { email, otp });
+    if (res.data.token) {
+      setToken(res.data.token);
+      setUser(res.data.user);
+      localStorage.setItem('gst_token', res.data.token);
+    }
+    return res.data;
+  };
+
+  const resendOtp = async (email) => {
+    const res = await api.post('/auth/resend-otp', { email });
     return res.data;
   };
 
@@ -89,6 +101,8 @@ export function AuthProvider({ children }) {
         loading,
         hasPermission,
         login,
+        verifyOtp,
+        resendOtp,
         register,
         forgotPassword,
         resetPassword,

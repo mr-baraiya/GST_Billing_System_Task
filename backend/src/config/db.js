@@ -38,6 +38,8 @@ async function initDb() {
       ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(50) NOT NULL DEFAULT 'Owner';
       ALTER TABLE users ADD COLUMN IF NOT EXISTS permissions JSONB;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'active';
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS otp_code VARCHAR(10);
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS otp_expires TIMESTAMP WITH TIME ZONE;
     `);
 
     console.log('Database schema verified & auto-migrated successfully.');

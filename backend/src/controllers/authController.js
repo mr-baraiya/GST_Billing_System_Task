@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../config/db');
-const { sendPasswordResetEmail } = require('../utils/emailService');
+const { sendPasswordResetEmail, sendLoginOtpEmail } = require('../utils/emailService');
 const { getPermissionsForRole } = require('../utils/permissions');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'gst_billing_jwt_secret';
@@ -84,7 +84,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// POST /api/auth/login
+// POST /api/auth/login (Step 1: Check password & send 2FA OTP)
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -113,6 +113,62 @@ exports.login = async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
+    // Generate 6-digit OTP code & 10-minute expiration timestamp
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+    await pool.query(
+      'UPDATE users SET otp_code = $1, otp_expires = $2 WHERE id = $3',
+      [otpCode, otpExpires, user.id]
+    );
+
+    // Send OTP email
+    await sendLoginOtpEmail(user.email, otpCode, user.name);
+
+    res.json({
+      requireOtp: true,
+      email: user.email,
+      message: `A 6-digit verification code has been sent to ${user.email}.`,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to initiate login OTP verification' });
+  }
+};
+
+// POST /api/auth/verify-otp (Step 2: Verify OTP & Issue Token)
+exports.verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+      return res.status(400).json({ error: 'Email and 6-digit OTP are required' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanOtp = otp.trim();
+
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [cleanEmail]);
+    if (result.rows.length === 0) {
+      return res.status(400).json({ error: 'User account not found' });
+    }
+
+    const user = result.rows[0];
+
+    if (!user.otp_code || !user.otp_expires) {
+      return res.status(400).json({ error: 'No OTP session found. Please log in again.' });
+    }
+
+    if (new Date(user.otp_expires) <= new Date()) {
+      return res.status(400).json({ error: 'OTP code has expired. Please click Resend OTP to get a new code.' });
+    }
+
+    if (user.otp_code !== cleanOtp) {
+      return res.status(400).json({ error: 'Invalid OTP code. Please check your email and try again.' });
+    }
+
+    // Clear OTP fields in DB upon successful verification
+    await pool.query('UPDATE users SET otp_code = NULL, otp_expires = NULL WHERE id = $1', [user.id]);
+
     const permissionsList = getPermissionsForRole(user.role, user.permissions);
     const token = generateToken(user);
 
@@ -132,7 +188,41 @@ exports.login = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to log in' });
+    res.status(500).json({ error: 'Failed to verify OTP code' });
+  }
+};
+
+// POST /api/auth/resend-otp
+exports.resendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required to resend OTP' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [cleanEmail]);
+    if (result.rows.length === 0) {
+      return res.status(400).json({ error: 'User account not found' });
+    }
+
+    const user = result.rows[0];
+
+    // Generate new 6-digit OTP code & 10-minute expiration
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+    await pool.query(
+      'UPDATE users SET otp_code = $1, otp_expires = $2 WHERE id = $3',
+      [otpCode, otpExpires, user.id]
+    );
+
+    await sendLoginOtpEmail(user.email, otpCode, user.name);
+
+    res.json({ message: `A new 6-digit verification code has been sent to ${user.email}.` });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to resend OTP' });
   }
 };
 

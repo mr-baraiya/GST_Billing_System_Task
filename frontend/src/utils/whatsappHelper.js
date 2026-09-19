@@ -34,8 +34,30 @@ export function formatWhatsAppInvoiceMessage(bill, shop = {}) {
     }\n`;
   }
 
-  const backendHost = window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin;
-  const viewUrl = `${window.location.origin}/bills/${bill.id}`;
+  // Fetch production or local environment URLs
+  const getBackendHost = () => {
+    const apiEnv = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+    if (apiEnv && apiEnv.startsWith('http')) {
+      return apiEnv.replace(/\/api\/?$/, '');
+    }
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      return 'http://localhost:5000';
+    }
+    return typeof window !== 'undefined' ? window.location.origin : '';
+  };
+
+  const getFrontendHost = () => {
+    const appEnv = import.meta.env.VITE_APP_URL;
+    if (appEnv && appEnv.startsWith('http')) {
+      return appEnv.replace(/\/$/, '');
+    }
+    return typeof window !== 'undefined' ? window.location.origin : '';
+  };
+
+  const backendHost = getBackendHost();
+  const frontendHost = getFrontendHost();
+
+  const viewUrl = `${frontendHost}/bills/${bill.id}`;
   const pdfDownloadUrl = `${backendHost}/api/bills/public/${bill.id}/pdf`;
 
   return (
