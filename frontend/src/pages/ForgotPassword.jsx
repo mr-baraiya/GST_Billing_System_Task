@@ -29,8 +29,15 @@ export default function ForgotPassword() {
   return (
     <div className="d-flex justify-content-center align-items-center vh-100" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
       <div className="card shadow-lg p-4" style={{ width: '100%', maxWidth: '420px', borderRadius: '16px' }}>
+        <div className="mb-2 text-start">
+          <Link to="/" className="text-decoration-none text-muted small d-inline-flex align-items-center">
+            <i className="bi bi-arrow-left me-1"></i> Back to Home
+          </Link>
+        </div>
         <div className="text-center mb-4">
-          <img src="/gstkhata_logo.png" alt="GSTKhata Logo" className="img-fluid mb-2" style={{ maxHeight: '55px' }} />
+          <Link to="/">
+            <img src="/gstkhata_logo.png" alt="GSTKhata Logo" className="img-fluid mb-2" style={{ maxHeight: '55px' }} />
+          </Link>
           <h4 className="fw-bold text-dark mb-1">Forgot Password?</h4>
           <p className="text-muted small">Enter your email and we'll send you a link to reset your GSTKhata password.</p>
         </div>

@@ -4,6 +4,7 @@ import api from '../api/axios';
 import Validator from '../utils/validator';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import Pagination from '../components/Pagination';
+import { formatCurrency } from '../utils/formatters';
 
 const INDIAN_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
@@ -333,7 +334,7 @@ export default function Parties() {
                               <td className="fw-bold">{b.invoice_no}</td>
                               <td>{new Date(b.invoice_date).toLocaleDateString('en-IN')}</td>
                               <td><span className="badge bg-secondary">{b.tax_type}</span></td>
-                              <td className="text-end fw-bold">₹{Number(b.grand_total).toFixed(2)}</td>
+                              <td className="text-end fw-bold">₹{formatCurrency(b.grand_total)}</td>
                               <td>
                                 <span className={`badge bg-${b.status === 'Paid' ? 'success' : b.status === 'Partial' ? 'warning' : 'danger'}`}>
                                   {b.status}

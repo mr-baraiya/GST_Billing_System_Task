@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api/axios';
 import WhatsAppShareModal from '../components/WhatsAppShareModal';
+import { formatCurrency } from '../utils/formatters';
 
 export default function BillView() {
   const { id } = useParams();
@@ -214,18 +215,18 @@ export default function BillView() {
                   <td className="fw-bold">{it.name}</td>
                   <td>{it.hsn_code || '-'}</td>
                   <td className="text-center">{it.qty}</td>
-                  <td className="text-end">₹{Number(it.rate).toFixed(2)}</td>
-                  <td className="text-end">₹{Number(it.taxable_amt).toFixed(2)}</td>
+                  <td className="text-end">₹{formatCurrency(it.rate)}</td>
+                  <td className="text-end">₹{formatCurrency(it.taxable_amt)}</td>
                   <td className="text-center">{it.gst_percent}%</td>
                   {!isIgst ? (
                     <>
-                      <td className="text-end">₹{Number(it.cgst).toFixed(2)}</td>
-                      <td className="text-end">₹{Number(it.sgst).toFixed(2)}</td>
+                      <td className="text-end">₹{formatCurrency(it.cgst)}</td>
+                      <td className="text-end">₹{formatCurrency(it.sgst)}</td>
                     </>
                   ) : (
-                    <td className="text-end">₹{Number(it.igst).toFixed(2)}</td>
+                    <td className="text-end">₹{formatCurrency(it.igst)}</td>
                   )}
-                  <td className="text-end fw-bold">₹{Number(it.line_total).toFixed(2)}</td>
+                  <td className="text-end fw-bold">₹{formatCurrency(it.line_total)}</td>
                 </tr>
               ))}
             </tbody>
@@ -253,26 +254,26 @@ export default function BillView() {
               <div className="card-body p-3">
                 <div className="d-flex justify-content-between mb-1">
                   <span>Subtotal (Taxable):</span>
-                  <span className="fw-semibold">₹{Number(bill.subtotal).toFixed(2)}</span>
+                  <span className="fw-semibold">₹{formatCurrency(bill.subtotal)}</span>
                 </div>
 
                 {Number(bill.discount) > 0 && (
                   <div className="d-flex justify-content-between mb-1 text-danger">
                     <span>Discount:</span>
-                    <span>- ₹{Number(bill.discount).toFixed(2)}</span>
+                    <span>- ₹{formatCurrency(bill.discount)}</span>
                   </div>
                 )}
 
                 <div className="d-flex justify-content-between mb-1">
                   <span>Total Tax Collected:</span>
-                  <span className="fw-semibold">₹{Number(bill.total_tax).toFixed(2)}</span>
+                  <span className="fw-semibold">₹{formatCurrency(bill.total_tax)}</span>
                 </div>
 
                 <hr className="my-1" />
 
                 <div className="d-flex justify-content-between align-items-center">
                   <span className="fs-5 fw-bold">Grand Total:</span>
-                  <span className="fs-4 fw-bold text-success">₹{Number(bill.grand_total).toFixed(2)}</span>
+                  <span className="fs-4 fw-bold text-success">₹{formatCurrency(bill.grand_total)}</span>
                 </div>
               </div>
             </div>

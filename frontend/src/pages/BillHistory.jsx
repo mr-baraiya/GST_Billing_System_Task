@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import Pagination from '../components/Pagination';
 import WhatsAppShareModal from '../components/WhatsAppShareModal';
+import { formatCurrency } from '../utils/formatters';
 
 export default function BillHistory() {
   const [bills, setBills] = useState([]);
@@ -165,9 +166,9 @@ export default function BillHistory() {
                     <td className="fw-semibold">{b.party_name}</td>
                     <td><span className="badge bg-light text-dark border">{b.party_state}</span></td>
                     <td><span className="badge bg-secondary">{b.tax_type}</span></td>
-                    <td className="text-end">₹{Number(b.subtotal).toFixed(2)}</td>
-                    <td className="text-end text-muted">₹{Number(b.total_tax).toFixed(2)}</td>
-                    <td className="text-end fw-bold text-success">₹{Number(b.grand_total).toFixed(2)}</td>
+                    <td className="text-end">₹{formatCurrency(b.subtotal)}</td>
+                    <td className="text-end text-muted">₹{formatCurrency(b.total_tax)}</td>
+                    <td className="text-end fw-bold text-success">₹{formatCurrency(b.grand_total)}</td>
                     <td>
                       <span className={`badge bg-${b.status === 'Paid' ? 'success' : b.status === 'Partial' ? 'warning' : 'danger'}`}>
                         {b.status}
@@ -229,12 +230,12 @@ export default function BillHistory() {
 
                   <div className="d-flex justify-content-between align-items-center mb-3 small">
                     <div>
-                      <span className="text-muted d-block">Subtotal: ₹{Number(b.subtotal).toFixed(2)}</span>
-                      <span className="text-muted d-block">Tax: ₹{Number(b.total_tax).toFixed(2)}</span>
+                      <span className="text-muted d-block">Subtotal: ₹{formatCurrency(b.subtotal)}</span>
+                      <span className="text-muted d-block">Tax: ₹{formatCurrency(b.total_tax)}</span>
                     </div>
                     <div className="text-end">
                       <span className="text-muted d-block small">Grand Total</span>
-                      <strong className="fs-5 text-success">₹{Number(b.grand_total).toFixed(2)}</strong>
+                      <strong className="fs-5 text-success">₹{formatCurrency(b.grand_total)}</strong>
                     </div>
                   </div>
 

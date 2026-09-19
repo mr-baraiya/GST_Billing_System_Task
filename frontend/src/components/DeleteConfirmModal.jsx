@@ -34,7 +34,7 @@ export default function DeleteConfirmModal({
             </div>
             <h5 className="fw-bold text-dark mb-2">{message}</h5>
             {itemName && (
-              <div className="p-2.5 bg-light rounded border text-dark fw-bold mb-3 small">
+              <div className="text-dark fw-bold mb-3">
                 "{itemName}"
               </div>
             )}

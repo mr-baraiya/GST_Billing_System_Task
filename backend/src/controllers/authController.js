@@ -122,8 +122,15 @@ exports.login = async (req, res) => {
       [otpCode, otpExpires, user.id]
     );
 
-    // Send OTP email
-    await sendLoginOtpEmail(user.email, otpCode, user.name);
+    // Send OTP email (Race condition so response returns immediately on Vercel)
+    try {
+      await Promise.race([
+        sendLoginOtpEmail(user.email, otpCode, user.name),
+        new Promise((resolve) => setTimeout(resolve, 2500))
+      ]);
+    } catch (emailErr) {
+      console.error('OTP email note:', emailErr.message);
+    }
 
     res.json({
       requireOtp: true,
@@ -217,7 +224,14 @@ exports.resendOtp = async (req, res) => {
       [otpCode, otpExpires, user.id]
     );
 
-    await sendLoginOtpEmail(user.email, otpCode, user.name);
+    try {
+      await Promise.race([
+        sendLoginOtpEmail(user.email, otpCode, user.name),
+        new Promise((resolve) => setTimeout(resolve, 2500))
+      ]);
+    } catch (emailErr) {
+      console.error('Resend OTP email note:', emailErr.message);
+    }
 
     res.json({ message: `A new 6-digit verification code has been sent to ${user.email}.` });
   } catch (err) {

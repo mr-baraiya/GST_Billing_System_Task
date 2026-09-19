@@ -59,9 +59,11 @@ exports.updateItem = async (req, res) => {
 exports.deleteItem = async (req, res) => {
   try {
     const { id } = req.params;
+    // Un-link item_id from existing bill line items so historical invoice data is preserved
+    await pool.query('UPDATE bill_items SET item_id = NULL WHERE item_id = $1', [id]);
     const result = await pool.query('DELETE FROM items WHERE id = $1 RETURNING id', [id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Item not found' });
-    res.json({ message: 'Item deleted' });
+    res.json({ message: 'Item deleted successfully' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to delete item' });

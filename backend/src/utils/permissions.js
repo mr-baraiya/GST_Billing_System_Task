@@ -72,7 +72,7 @@ function getPermissionsForRole(role, customPermissions = null) {
     }
   }
 
-  if (Array.isArray(perms) && perms.length > 0) {
+  if (Array.isArray(perms)) {
     return perms;
   }
 

@@ -90,13 +90,11 @@ exports.updateParty = async (req, res) => {
 exports.deleteParty = async (req, res) => {
   try {
     const { id } = req.params;
-    const inUse = await pool.query('SELECT 1 FROM bills WHERE party_id = $1 LIMIT 1', [id]);
-    if (inUse.rows.length > 0) {
-      return res.status(409).json({ error: 'Cannot delete party with existing bills' });
-    }
+    // Un-link party_id from existing bills so historical invoice data is preserved
+    await pool.query('UPDATE bills SET party_id = NULL WHERE party_id = $1', [id]);
     const result = await pool.query('DELETE FROM parties WHERE id = $1 RETURNING id', [id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Party not found' });
-    res.json({ message: 'Party deleted' });
+    res.json({ message: 'Party deleted successfully' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to delete party' });

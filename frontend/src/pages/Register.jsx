@@ -38,8 +38,15 @@ export default function Register() {
   return (
     <div className="d-flex justify-content-center align-items-center vh-100" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
       <div className="card shadow-lg p-4" style={{ width: '100%', maxWidth: '440px', borderRadius: '16px' }}>
+        <div className="mb-2 text-start">
+          <Link to="/" className="text-decoration-none text-muted small d-inline-flex align-items-center">
+            <i className="bi bi-arrow-left me-1"></i> Back to Home
+          </Link>
+        </div>
         <div className="text-center mb-4">
-          <img src="/gstkhata_logo.png" alt="GSTKhata Logo" className="img-fluid mb-2" style={{ maxHeight: '55px' }} />
+          <Link to="/">
+            <img src="/gstkhata_logo.png" alt="GSTKhata Logo" className="img-fluid mb-2" style={{ maxHeight: '55px' }} />
+          </Link>
           <p className="text-muted small">Register to start managing GST billing</p>
         </div>
 
@@ -119,9 +126,14 @@ export default function Register() {
           </button>
         </form>
 
-        <div className="text-center small text-muted">
-          Already have an account?{' '}
-          <Link to="/login" className="fw-bold text-primary text-decoration-none">Sign In</Link>
+        <div className="text-center small text-muted border-top pt-3 mt-1 d-flex justify-content-between align-items-center">
+          <Link to="/" className="text-secondary text-decoration-none">
+            <i className="bi bi-house-door me-1"></i> Home
+          </Link>
+          <div>
+            Already have an account?{' '}
+            <Link to="/login" className="fw-bold text-primary text-decoration-none">Sign In</Link>
+          </div>
         </div>
       </div>
     </div>

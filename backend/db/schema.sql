@@ -27,6 +27,19 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS custom_roles (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    permissions JSONB NOT NULL DEFAULT '[]',
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS gst_rates (
+    id SERIAL PRIMARY KEY,
+    rate NUMERIC(5,2) UNIQUE NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS parties (
     id SERIAL PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
@@ -51,7 +64,7 @@ CREATE TABLE IF NOT EXISTS bills (
     id SERIAL PRIMARY KEY,
     invoice_no VARCHAR(30) UNIQUE NOT NULL,
     invoice_date DATE NOT NULL DEFAULT CURRENT_DATE,
-    party_id INTEGER NOT NULL REFERENCES parties(id),
+    party_id INTEGER REFERENCES parties(id) ON DELETE SET NULL,
     party_name VARCHAR(150) NOT NULL,
     party_mobile VARCHAR(15),
     party_address TEXT,
@@ -71,7 +84,7 @@ CREATE TABLE IF NOT EXISTS bills (
 CREATE TABLE IF NOT EXISTS bill_items (
     id SERIAL PRIMARY KEY,
     bill_id INTEGER NOT NULL REFERENCES bills(id) ON DELETE CASCADE,
-    item_id INTEGER REFERENCES items(id),
+    item_id INTEGER REFERENCES items(id) ON DELETE SET NULL,
     name VARCHAR(150) NOT NULL,
     hsn_code VARCHAR(20),
     qty NUMERIC(10,2) NOT NULL,

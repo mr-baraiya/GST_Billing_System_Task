@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
+import { formatCurrency } from '../utils/formatters';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -180,7 +181,7 @@ export default function Dashboard() {
         <div className="col-md-3 col-6">
           <div className="card card-stat shadow-sm h-100 p-3" style={{ borderLeftColor: '#2563eb' }}>
             <div className="text-muted small fw-semibold text-uppercase">Total Sales</div>
-            <h3 className="fw-bold text-dark my-1">₹{data.totalSales.toFixed(2)}</h3>
+            <h3 className="fw-bold text-dark my-1">₹{formatCurrency(data.totalSales)}</h3>
             <div className="text-muted small"><i className="bi bi-graph-up-arrow text-primary me-1"></i> Cumulative Sales</div>
           </div>
         </div>
@@ -188,7 +189,7 @@ export default function Dashboard() {
         <div className="col-md-3 col-6">
           <div className="card card-stat shadow-sm h-100 p-3" style={{ borderLeftColor: '#ef4444' }}>
             <div className="text-muted small fw-semibold text-uppercase">Total Tax Collected</div>
-            <h3 className="fw-bold text-danger my-1">₹{data.totalTax.toFixed(2)}</h3>
+            <h3 className="fw-bold text-danger my-1">₹{formatCurrency(data.totalTax)}</h3>
             <div className="text-muted small"><i className="bi bi-piggy-bank me-1"></i> CGST + SGST + IGST</div>
           </div>
         </div>
@@ -204,7 +205,7 @@ export default function Dashboard() {
         <div className="col-md-3 col-6">
           <div className="card card-stat shadow-sm h-100 p-3" style={{ borderLeftColor: '#8b5cf6' }}>
             <div className="text-muted small fw-semibold text-uppercase">This Month</div>
-            <h3 className="fw-bold text-primary my-1">₹{data.thisMonth.amount.toFixed(2)}</h3>
+            <h3 className="fw-bold text-primary my-1">₹{formatCurrency(data.thisMonth.amount)}</h3>
             <div className="text-muted small">{data.thisMonth.count} bills generated</div>
           </div>
         </div>
@@ -294,7 +295,8 @@ export default function Dashboard() {
           <h6 className="fw-bold mb-0"><i className="bi bi-clock-history me-2"></i>Recent Generated Invoices</h6>
           <Link to="/bills" className="btn btn-sm btn-primary">View All Invoices</Link>
         </div>
-        <div className="table-responsive">
+        {/* Desktop Table View */}
+        <div className="table-responsive d-none d-md-block">
           <table className="table table-hover table-sm mb-0 align-middle">
             <thead className="table-light">
               <tr>
@@ -317,7 +319,7 @@ export default function Dashboard() {
                     </td>
                     <td>{new Date(b.invoice_date).toLocaleDateString('en-IN')}</td>
                     <td className="fw-semibold">{b.party_name}</td>
-                    <td className="text-end fw-bold text-success">₹{Number(b.grand_total).toFixed(2)}</td>
+                    <td className="text-end fw-bold text-success">₹{formatCurrency(b.grand_total)}</td>
                     <td>
                       <span className={`badge bg-${b.status === 'Paid' ? 'success' : b.status === 'Partial' ? 'warning' : 'danger'}`}>
                         {b.status}
@@ -333,6 +335,49 @@ export default function Dashboard() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Cards View */}
+        <div className="d-block d-md-none p-3">
+          {data.recentBills.length === 0 ? (
+            <div className="text-center text-muted py-4">No invoices created yet. Click "Create GST Bill" to start!</div>
+          ) : (
+            data.recentBills.map((b) => (
+              <div key={b.id} className="card border mb-3 shadow-sm rounded-3">
+                <div className="card-body p-3">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <Link to={`/bills/${b.id}`} className="fw-bold text-primary text-decoration-none fs-6">
+                      {b.invoice_no}
+                    </Link>
+                    <span className={`badge bg-${b.status === 'Paid' ? 'success' : b.status === 'Partial' ? 'warning' : 'danger'}`}>
+                      {b.status}
+                    </span>
+                  </div>
+
+                  <div className="row g-2 my-2 py-2 border-top border-bottom small">
+                    <div className="col-6">
+                      <span className="text-muted d-block">Customer / Party:</span>
+                      <strong className="text-dark">{b.party_name}</strong>
+                    </div>
+                    <div className="col-6 text-end">
+                      <span className="text-muted d-block">Date:</span>
+                      <span className="text-dark">{new Date(b.invoice_date).toLocaleDateString('en-IN')}</span>
+                    </div>
+                  </div>
+
+                  <div className="d-flex justify-content-between align-items-center pt-1">
+                    <div>
+                      <span className="text-muted small d-block">Grand Total:</span>
+                      <span className="fw-bold text-success fs-5">₹{formatCurrency(b.grand_total)}</span>
+                    </div>
+                    <Link to={`/bills/${b.id}`} className="btn btn-sm btn-outline-primary rounded-pill px-3">
+                      <i className="bi bi-eye me-1"></i> View Bill
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

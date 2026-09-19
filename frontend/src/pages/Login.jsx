@@ -109,8 +109,15 @@ export default function Login() {
   return (
     <div className="d-flex justify-content-center align-items-center vh-100" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
       <div className="card shadow-lg p-4" style={{ width: '100%', maxWidth: '440px', borderRadius: '16px' }}>
+        <div className="mb-2 text-start">
+          <Link to="/" className="text-decoration-none text-muted small d-inline-flex align-items-center">
+            <i className="bi bi-arrow-left me-1"></i> Back to Home
+          </Link>
+        </div>
         <div className="text-center mb-4">
-          <img src="/gstkhata_logo.png" alt="GSTKhata Logo" className="img-fluid mb-2" style={{ maxHeight: '55px' }} />
+          <Link to="/">
+            <img src="/gstkhata_logo.png" alt="GSTKhata Logo" className="img-fluid mb-2" style={{ maxHeight: '55px' }} />
+          </Link>
           <h5 className="fw-bold mb-1">{step === 1 ? 'Welcome Back' : 'Two-Step Verification'}</h5>
           <p className="text-muted small mb-0">
             {step === 1
@@ -227,9 +234,14 @@ export default function Login() {
         )}
 
         {step === 1 && (
-          <div className="text-center small text-muted border-top pt-3 mt-1">
-            Don't have an account?{' '}
-            <Link to="/register" className="fw-bold text-primary text-decoration-none">Create Account</Link>
+          <div className="text-center small text-muted border-top pt-3 mt-1 d-flex justify-content-between align-items-center">
+            <Link to="/" className="text-secondary text-decoration-none">
+              <i className="bi bi-house-door me-1"></i> Home
+            </Link>
+            <div>
+              Don't have an account?{' '}
+              <Link to="/register" className="fw-bold text-primary text-decoration-none">Create Account</Link>
+            </div>
           </div>
         )}
       </div>

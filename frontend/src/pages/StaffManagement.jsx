@@ -30,6 +30,7 @@ export default function StaffManagement() {
   const { user: currentUser, hasPermission } = useAuth();
 
   const [staffList, setStaffList] = useState([]);
+  const [customRoles, setCustomRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
@@ -42,7 +43,7 @@ export default function StaffManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(8);
 
-  // Modal State
+  // Add / Edit Staff Modal State
   const [showModal, setShowModal] = useState(false);
   const [editingStaff, setEditingStaff] = useState(null);
   const [formData, setFormData] = useState({
@@ -57,8 +58,18 @@ export default function StaffManagement() {
   const [formMsg, setFormMsg] = useState({ type: '', text: '' });
   const [submitting, setSubmitting] = useState(false);
 
+  // Manage Roles Modal State
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [editingRole, setEditingRole] = useState(null);
+  const [newRoleName, setNewRoleName] = useState('');
+  const [newRolePerms, setNewRolePerms] = useState(['dashboard', 'parties', 'items', 'create_bill', 'bills_history']);
+  const [roleMsg, setRoleMsg] = useState({ type: '', text: '' });
+  const [roleSubmitting, setRoleSubmitting] = useState(false);
+  const [deleteRoleTarget, setDeleteRoleTarget] = useState(null);
+
   useEffect(() => {
     fetchStaffList();
+    fetchCustomRoles();
   }, []);
 
   const fetchStaffList = async () => {
@@ -73,6 +84,26 @@ export default function StaffManagement() {
     }
   };
 
+  const fetchCustomRoles = async () => {
+    try {
+      const res = await api.get('/roles');
+      setCustomRoles(res.data.custom || res.data.all || []);
+    } catch (err) {
+      console.error('Failed to load roles:', err);
+    }
+  };
+
+  const getPresetPermsForRole = (roleName) => {
+    if (roleName === 'Owner') {
+      return DEFAULT_ROLE_PRESETS.Owner;
+    }
+    const found = customRoles.find((r) => r.name === roleName);
+    if (found) {
+      return found.permissions || [];
+    }
+    return DEFAULT_ROLE_PRESETS[roleName] || DEFAULT_ROLE_PRESETS['Billing Staff'];
+  };
+
   const handleOpenAddModal = () => {
     setEditingStaff(null);
     setFormData({
@@ -82,7 +113,7 @@ export default function StaffManagement() {
       mobile: '',
       profile_picture: '',
       role: 'Billing Staff',
-      permissions: DEFAULT_ROLE_PRESETS['Billing Staff'],
+      permissions: getPresetPermsForRole('Billing Staff'),
     });
     setFormMsg({ type: '', text: '' });
     setShowModal(true);
@@ -92,7 +123,7 @@ export default function StaffManagement() {
     setEditingStaff(staff);
     const staffPerms = Array.isArray(staff.permissions)
       ? staff.permissions
-      : DEFAULT_ROLE_PRESETS[staff.role] || [];
+      : getPresetPermsForRole(staff.role);
 
     setFormData({
       name: staff.name || '',
@@ -108,7 +139,13 @@ export default function StaffManagement() {
   };
 
   const handleRoleChange = (selectedRole) => {
-    let presetPerms = DEFAULT_ROLE_PRESETS[selectedRole] || formData.permissions;
+    if (selectedRole === '__CREATE_NEW_ROLE__') {
+      resetRoleForm();
+      setShowRoleModal(true);
+      return;
+    }
+
+    let presetPerms = getPresetPermsForRole(selectedRole);
     setFormData({
       ...formData,
       role: selectedRole,
@@ -127,6 +164,94 @@ export default function StaffManagement() {
       ...formData,
       permissions: updated,
     });
+  };
+
+  const handleNewRolePermToggle = (permKey) => {
+    const exists = newRolePerms.includes(permKey);
+    const updated = exists
+      ? newRolePerms.filter((p) => p !== permKey)
+      : [...newRolePerms, permKey];
+    setNewRolePerms(updated);
+  };
+
+  const resetRoleForm = () => {
+    setEditingRole(null);
+    setNewRoleName('');
+    setNewRolePerms(['dashboard', 'parties', 'items', 'create_bill', 'bills_history']);
+    setRoleMsg({ type: '', text: '' });
+  };
+
+  const handleStartEditRole = (cr) => {
+    setEditingRole(cr);
+    setNewRoleName(cr.name);
+    setNewRolePerms(Array.isArray(cr.permissions) ? cr.permissions : []);
+    setRoleMsg({ type: '', text: '' });
+  };
+
+  const handleRoleFormSubmit = async (e) => {
+    e.preventDefault();
+    setRoleMsg({ type: '', text: '' });
+
+    if (!newRoleName.trim()) {
+      return setRoleMsg({ type: 'danger', text: 'Please enter a role name' });
+    }
+
+    setRoleSubmitting(true);
+    try {
+      if (editingRole) {
+        const res = await api.put(`/roles/${editingRole.id}`, {
+          name: newRoleName.trim(),
+          permissions: newRolePerms,
+        });
+
+        const updatedRole = res.data.role;
+        await fetchCustomRoles();
+        await fetchStaffList();
+
+        setRoleMsg({ type: 'success', text: `Role '${updatedRole.name}' updated successfully!` });
+        resetRoleForm();
+      } else {
+        const res = await api.post('/roles', {
+          name: newRoleName.trim(),
+          permissions: newRolePerms,
+        });
+
+        const createdRole = res.data.role;
+        await fetchCustomRoles();
+        await fetchStaffList();
+
+        setRoleMsg({ type: 'success', text: `Role '${createdRole.name}' created successfully!` });
+        resetRoleForm();
+
+        // Automatically select the new role if staff form is active
+        if (showModal) {
+          setFormData((prev) => ({
+            ...prev,
+            role: createdRole.name,
+            permissions: createdRole.permissions,
+          }));
+        }
+      }
+    } catch (err) {
+      setRoleMsg({ type: 'danger', text: err.response?.data?.error || 'Operation failed' });
+    } finally {
+      setRoleSubmitting(false);
+    }
+  };
+
+  const handleDeleteCustomRole = async () => {
+    if (!deleteRoleTarget) return;
+    try {
+      await api.delete(`/roles/${deleteRoleTarget.id}`);
+      await fetchCustomRoles();
+      await fetchStaffList();
+      setDeleteRoleTarget(null);
+      if (editingRole?.id === deleteRoleTarget.id) {
+        resetRoleForm();
+      }
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to delete role');
+    }
   };
 
   const handleFileChange = (e) => {
@@ -206,34 +331,34 @@ export default function StaffManagement() {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentStaff = filteredStaff.slice(indexOfFirstItem, indexOfLastItem);
 
-  const getRoleBadgeClass = (role) => {
-    switch (role) {
-      case 'Owner': return 'bg-dark text-white border border-secondary';
-      case 'Manager': return 'bg-primary text-white';
-      case 'Billing Staff': return 'bg-info bg-opacity-25 text-info border border-info border-opacity-25';
-      case 'Accountant': return 'bg-warning bg-opacity-25 text-warning-emphasis border border-warning border-opacity-25';
-      case 'Sales Staff': return 'bg-secondary bg-opacity-25 text-white border border-secondary border-opacity-25';
-      default: return 'bg-light text-dark border';
-    }
-  };
-
   return (
     <div className="container-fluid p-0">
       {/* Page Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
         <div>
           <h4 className="fw-bold text-dark mb-1">
             <i className="bi bi-people-fill text-primary me-2"></i>Staff & Role Management
           </h4>
           <p className="text-muted small mb-0">
-            Create staff accounts, assign business roles, and configure granular permissions
+            Create staff accounts, manage business roles, and configure granular permissions
           </p>
         </div>
 
         {hasPermission('manage_staff') && (
-          <button className="btn btn-primary btn-sm px-3 shadow-sm rounded-pill" onClick={handleOpenAddModal}>
-            <i className="bi bi-person-plus-fill me-1"></i> Add Staff Member
-          </button>
+          <div className="d-flex align-items-center gap-2">
+            <button
+              className="btn btn-outline-dark btn-sm px-3 shadow-sm rounded-pill"
+              onClick={() => {
+                resetRoleForm();
+                setShowRoleModal(true);
+              }}
+            >
+              <i className="bi bi-sliders me-1"></i> Manage Roles
+            </button>
+            <button className="btn btn-primary btn-sm px-3 shadow-sm rounded-pill" onClick={handleOpenAddModal}>
+              <i className="bi bi-person-plus-fill me-1"></i> Add Staff Member
+            </button>
+          </div>
         )}
       </div>
 
@@ -261,10 +386,11 @@ export default function StaffManagement() {
               >
                 <option value="">All Business Roles</option>
                 <option value="Owner">Owner / Admin</option>
-                <option value="Manager">Manager</option>
-                <option value="Billing Staff">Billing Staff</option>
-                <option value="Accountant">Accountant</option>
-                <option value="Sales Staff">Sales Staff</option>
+                {customRoles.map((cr) => (
+                  <option key={cr.id} value={cr.name}>
+                    {cr.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="col-md-2 text-end">
@@ -312,17 +438,21 @@ export default function StaffManagement() {
                     {currentStaff.map((staff) => {
                       const permList = Array.isArray(staff.permissions)
                         ? staff.permissions
-                        : DEFAULT_ROLE_PRESETS[staff.role] || [];
+                        : getPresetPermsForRole(staff.role);
 
                       return (
                         <tr key={staff.id}>
                           <td className="ps-4">
                             <div className="d-flex align-items-center">
                               <div
-                                className="rounded-circle bg-dark text-white fw-bold d-flex align-items-center justify-content-center me-3 shadow-sm"
+                                className="rounded-circle bg-dark text-white fw-bold d-flex align-items-center justify-content-center me-3 shadow-sm overflow-hidden"
                                 style={{ width: '40px', height: '40px', fontSize: '0.9rem', background: 'linear-gradient(135deg, #0f172a 0%, #2563eb 100%)' }}
                               >
-                                {staff.name.charAt(0).toUpperCase()}
+                                {staff.profile_picture ? (
+                                  <img src={staff.profile_picture} alt={staff.name} className="w-100 h-100" style={{ objectFit: 'cover' }} />
+                                ) : (
+                                  staff.name.charAt(0).toUpperCase()
+                                )}
                               </div>
                               <div>
                                 <div className="fw-bold text-dark">{staff.name}</div>
@@ -338,9 +468,7 @@ export default function StaffManagement() {
                             )}
                           </td>
                           <td>
-                            <span className="fw-bold text-dark">
-                              {staff.role || 'Staff'}
-                            </span>
+                            <span className="fw-bold text-dark">{staff.role || 'Staff'}</span>
                           </td>
                           <td>
                             <div style={{ maxWidth: '380px' }}>
@@ -402,7 +530,7 @@ export default function StaffManagement() {
                 {currentStaff.map((staff) => {
                   const permList = Array.isArray(staff.permissions)
                     ? staff.permissions
-                    : DEFAULT_ROLE_PRESETS[staff.role] || [];
+                    : getPresetPermsForRole(staff.role);
 
                   return (
                     <div key={staff.id} className="card border mb-3 shadow-sm rounded-3">
@@ -410,10 +538,14 @@ export default function StaffManagement() {
                         <div className="d-flex align-items-center justify-content-between mb-2">
                           <div className="d-flex align-items-center">
                             <div
-                              className="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center me-2 shadow-sm"
+                              className="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center me-2 shadow-sm overflow-hidden"
                               style={{ width: '38px', height: '38px', fontSize: '0.85rem', background: 'linear-gradient(135deg, #0f172a 0%, #2563eb 100%)' }}
                             >
-                              {staff.name.charAt(0).toUpperCase()}
+                              {staff.profile_picture ? (
+                                <img src={staff.profile_picture} alt={staff.name} className="w-100 h-100" style={{ objectFit: 'cover' }} />
+                              ) : (
+                                staff.name.charAt(0).toUpperCase()
+                              )}
                             </div>
                             <div>
                               <h6 className="fw-bold text-dark mb-0">{staff.name}</h6>
@@ -598,18 +730,33 @@ export default function StaffManagement() {
                     </div>
 
                     <div className="col-md-12">
-                      <label className="form-label fw-semibold small">Assign Business Role *</label>
+                      <div className="d-flex justify-content-between align-items-center mb-1">
+                        <label className="form-label fw-semibold small mb-0">Assign Business Role *</label>
+                        <button
+                          type="button"
+                          className="btn btn-link btn-sm p-0 text-decoration-none text-primary fw-semibold"
+                          style={{ fontSize: '0.8rem' }}
+                          onClick={() => {
+                            resetRoleForm();
+                            setShowRoleModal(true);
+                          }}
+                        >
+                          + Add New Role
+                        </button>
+                      </div>
                       <select
                         className="form-select"
                         value={formData.role}
                         onChange={(e) => handleRoleChange(e.target.value)}
                         disabled={editingStaff?.role === 'Owner'}
                       >
-                        <option value="Billing Staff">Billing Staff (Create Bills, View Catalog)</option>
-                        <option value="Manager">Manager (Full operational access, no shop settings)</option>
-                        <option value="Accountant">Accountant (View Invoices, Financial Reports)</option>
-                        <option value="Sales Staff">Sales Staff (Create & Search Invoices)</option>
-                        <option value="Custom">Custom Role (Select Custom Permissions Below)</option>
+                        {customRoles.map((cr) => (
+                          <option key={cr.id} value={cr.name}>
+                            {cr.name}
+                          </option>
+                        ))}
+                        <option value="Custom">Custom Permissions (Manual Setup)</option>
+                        <option value="__CREATE_NEW_ROLE__">+ Add New Role...</option>
                         {editingStaff?.role === 'Owner' && <option value="Owner">Owner / Administrator</option>}
                       </select>
                     </div>
@@ -671,6 +818,169 @@ export default function StaffManagement() {
           </div>
         </div>
       )}
+
+      {/* Manage Roles Modal */}
+      {showRoleModal && (
+        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1070 }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div className="modal-content shadow-lg border-0">
+              <div className="modal-header bg-primary text-white">
+                <h5 className="modal-title fw-bold">
+                  <i className="bi bi-sliders me-2"></i>Manage Business Roles
+                </h5>
+                <button type="button" className="btn-close btn-close-white" onClick={() => { setShowRoleModal(false); resetRoleForm(); }}></button>
+              </div>
+
+              <div className="modal-body p-4">
+                {roleMsg.text && <div className={`alert alert-${roleMsg.type} py-2 small mb-3`}>{roleMsg.text}</div>}
+
+                {/* Form to create or edit role */}
+                <div className={`card border shadow-sm p-3 mb-4 ${editingRole ? 'bg-primary-subtle border-primary' : 'bg-light'}`}>
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h6 className="fw-bold text-dark mb-0">
+                      <i className={`bi ${editingRole ? 'bi-pencil-square text-primary' : 'bi-plus-circle-fill text-primary'} me-2`}></i>
+                      {editingRole ? `Edit Role: ${editingRole.name}` : 'Create New Role'}
+                    </h6>
+
+                    {editingRole && (
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-secondary py-0"
+                        style={{ fontSize: '0.75rem' }}
+                        onClick={resetRoleForm}
+                      >
+                        Cancel Edit
+                      </button>
+                    )}
+                  </div>
+
+                  <form onSubmit={handleRoleFormSubmit}>
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold small">Role Title *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="e.g. Store Supervisor, Auditor, Store Manager"
+                        value={newRoleName}
+                        onChange={(e) => setNewRoleName(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold small">Default Permissions for this Role</label>
+                      <div className="row g-2">
+                        {PERMISSION_CONFIG.map((perm) => {
+                          const isChecked = newRolePerms.includes(perm.key);
+                          return (
+                            <div className="col-md-6" key={perm.key}>
+                              <div className="card border p-2 bg-white">
+                                <div className="form-check">
+                                  <input
+                                    className="form-check-input me-2"
+                                    type="checkbox"
+                                    id={`new-role-perm-${perm.key}`}
+                                    checked={isChecked}
+                                    onChange={() => handleNewRolePermToggle(perm.key)}
+                                  />
+                                  <label className="form-check-label user-select-none" htmlFor={`new-role-perm-${perm.key}`}>
+                                    <div className="fw-semibold text-dark small">{perm.label}</div>
+                                  </label>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="d-flex justify-content-end gap-2">
+                      {editingRole && (
+                        <button type="button" className="btn btn-secondary btn-sm px-3 rounded-pill" onClick={resetRoleForm}>
+                          Cancel
+                        </button>
+                      )}
+                      <button type="submit" className="btn btn-primary btn-sm px-4 rounded-pill" disabled={roleSubmitting}>
+                        {roleSubmitting ? 'Saving Role...' : editingRole ? 'Save Changes to Role' : 'Create Role'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* Existing Roles List */}
+                <div>
+                  <h6 className="fw-bold text-dark mb-2">Manage Business Roles ({customRoles.length})</h6>
+                  {customRoles.length === 0 ? (
+                    <div className="text-center py-4 border rounded-3 bg-white">
+                      <i className="bi bi-award text-muted fs-3"></i>
+                      <p className="text-muted small mb-0 mt-1">No roles found. Use the form above to add one.</p>
+                    </div>
+                  ) : (
+                    <div className="d-flex flex-column gap-2">
+                      {customRoles.map((cr) => (
+                        <div key={cr.id} className={`card border p-3 bg-white shadow-sm ${editingRole?.id === cr.id ? 'border-primary border-2' : ''}`}>
+                          <div className="d-flex justify-content-between align-items-start">
+                            <div>
+                              <div className="d-flex align-items-center gap-2 mb-1">
+                                <h6 className="fw-bold text-dark mb-0">{cr.name}</h6>
+                                {editingRole?.id === cr.id && (
+                                  <span className="badge bg-warning text-dark">Editing Now</span>
+                                )}
+                              </div>
+                              <div className="d-flex flex-wrap gap-1 mt-2">
+                                {(cr.permissions || []).map((p) => {
+                                  const cfg = PERMISSION_CONFIG.find((c) => c.key === p);
+                                  return (
+                                    <span key={p} className="badge bg-light text-secondary border">
+                                      {cfg ? cfg.label : p}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            <div className="d-flex align-items-center gap-1">
+                              <button
+                                className="btn btn-outline-primary btn-sm p-1 px-2 border-0"
+                                title="Edit Role"
+                                onClick={() => handleStartEditRole(cr)}
+                              >
+                                <i className="bi bi-pencil-square"></i>
+                              </button>
+                              <button
+                                className="btn btn-outline-danger btn-sm p-1 px-2 border-0"
+                                title="Delete Role"
+                                onClick={() => setDeleteRoleTarget(cr)}
+                              >
+                                <i className="bi bi-trash"></i>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => { setShowRoleModal(false); resetRoleForm(); }}>Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Role Confirmation Modal */}
+      <DeleteConfirmModal
+        show={Boolean(deleteRoleTarget)}
+        title="Delete Role"
+        message="Are you sure you want to delete this business role?"
+        itemName={deleteRoleTarget?.name}
+        onConfirm={handleDeleteCustomRole}
+        onCancel={() => setDeleteRoleTarget(null)}
+        confirmBtnText="Delete Role"
+      />
 
       {/* Reusable Delete / Status Toggle Confirmation Modal */}
       <DeleteConfirmModal

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { formatCurrency } from '../utils/formatters';
 
 const GST_SLABS = [0, 5, 12, 18, 28];
 const INDIAN_STATES = [
@@ -107,6 +108,8 @@ export default function CreateBill() {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
+  const [gstRates, setGstRates] = useState([0, 5, 12, 18, 28]);
+
   // Quick Add Party Modal
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [quickForm, setQuickForm] = useState({ name: '', mobile: '', state: 'Gujarat', address: '', gstin: '', email: '' });
@@ -114,14 +117,18 @@ export default function CreateBill() {
 
   const loadData = async () => {
     try {
-      const [shopRes, partyRes, itemRes] = await Promise.all([
+      const [shopRes, partyRes, itemRes, gstRes] = await Promise.all([
         api.get('/shop'),
         api.get('/parties'),
-        api.get('/items')
+        api.get('/items'),
+        api.get('/gst-rates').catch(() => ({ data: [] }))
       ]);
       setShop(shopRes.data);
       setParties(partyRes.data);
       setItems(itemRes.data);
+      if (Array.isArray(gstRes.data) && gstRes.data.length > 0) {
+        setGstRates(gstRes.data.map((r) => Number(r.rate)));
+      }
       if (quickForm.state !== shopRes.data.state) {
         setQuickForm((prev) => ({ ...prev, state: shopRes.data.state }));
       }
@@ -133,7 +140,7 @@ export default function CreateBill() {
   useEffect(() => {
     loadData();
     // Start with 1 default line
-    setLines([{ key: lineKey++, itemId: '', name: '', hsnCode: '', rate: '', qty: 1, gstPercent: 18 }]);
+    setLines([{ key: lineKey++, itemId: '', name: '', hsnCode: '', rate: '', qty: 1, gstPercent: 0 }]);
   }, []);
 
   const selectedParty = parties.find((p) => String(p.id) === String(partyId));
@@ -141,7 +148,7 @@ export default function CreateBill() {
   const sameState = selectedParty && selectedParty.state.trim().toLowerCase() === shopState.trim().toLowerCase();
 
   const addLine = () => {
-    setLines([...lines, { key: lineKey++, itemId: '', name: '', hsnCode: '', rate: '', qty: 1, gstPercent: 18 }]);
+    setLines([...lines, { key: lineKey++, itemId: '', name: '', hsnCode: '', rate: '', qty: 1, gstPercent: 0 }]);
   };
 
   const updateLine = (key, field, value) => {
@@ -150,14 +157,28 @@ export default function CreateBill() {
       if (field === 'itemId') {
         const chosen = items.find((it) => String(it.id) === String(value));
         return chosen
-          ? { ...l, itemId: value, name: chosen.name, hsnCode: chosen.hsn_code || '', rate: chosen.price, gstPercent: chosen.gst_percent }
+          ? {
+              ...l,
+              itemId: value,
+              name: chosen.name,
+              hsnCode: chosen.hsn_code || '',
+              rate: chosen.price,
+              gstPercent: Number(chosen.gst_percent),
+              isCustomGst: false
+            }
           : { ...l, itemId: value };
       }
       return { ...l, [field]: value };
     }));
   };
 
-  const removeLine = (key) => setLines(lines.filter((l) => l.key !== key));
+  const removeLine = (key) => {
+    if (lines.length > 1) {
+      setLines(lines.filter((l) => l.key !== key));
+    } else {
+      setLines([{ key: lineKey++, itemId: '', name: '', hsnCode: '', rate: '', qty: 1, gstPercent: 0, isCustomGst: false }]);
+    }
+  };
 
   const computeLine = (l) => {
     const rate = Number(l.rate) || 0;
@@ -305,7 +326,9 @@ export default function CreateBill() {
                   {sameState ? 'CGST+SGST' : 'IGST'}
                 </th>
                 <th className="text-end" style={{ width: 130 }}>Line Total</th>
-                <th style={{ width: 50 }}></th>
+                <th className="text-center" style={{ width: 50 }}>
+                  <i className="bi bi-trash3 text-muted"></i>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -324,7 +347,8 @@ export default function CreateBill() {
                             name: chosen.name,
                             hsnCode: chosen.hsn_code || '',
                             rate: chosen.price,
-                            gstPercent: chosen.gst_percent
+                            gstPercent: Number(chosen.gst_percent),
+                            isCustomGst: false
                           } : line));
                         }}
                         onChangeName={(newName) => updateLine(l.key, 'name', newName)}
@@ -358,13 +382,45 @@ export default function CreateBill() {
                       />
                     </td>
                     <td>
-                      <select
-                        className="form-select form-select-sm"
-                        value={l.gstPercent}
-                        onChange={(e) => updateLine(l.key, 'gstPercent', e.target.value)}
-                      >
-                        {GST_SLABS.map((g) => <option key={g} value={g}>{g}%</option>)}
-                      </select>
+                      {l.isCustomGst ? (
+                        <div className="input-group input-group-sm">
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            max="100"
+                            className="form-control form-control-sm px-1 text-center"
+                            value={l.gstPercent}
+                            onChange={(e) => updateLine(l.key, 'gstPercent', e.target.value)}
+                            placeholder="%"
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-outline-secondary btn-sm px-1"
+                            title="Back to list"
+                            onClick={() => updateLine(l.key, 'isCustomGst', false)}
+                          >
+                            <i className="bi bi-list-ul"></i>
+                          </button>
+                        </div>
+                      ) : (
+                        <select
+                          className="form-select form-select-sm"
+                          value={Number(l.gstPercent)}
+                          onChange={(e) => {
+                            if (e.target.value === '__CUSTOM__') {
+                              updateLine(l.key, 'isCustomGst', true);
+                            } else {
+                              updateLine(l.key, 'gstPercent', Number(e.target.value));
+                            }
+                          }}
+                        >
+                          {Array.from(new Set([...gstRates, Number(l.gstPercent)])).sort((a,b)=>a-b).map((g) => (
+                            <option key={g} value={g}>{g}%</option>
+                          ))}
+                          <option value="__CUSTOM__">+ Custom %</option>
+                        </select>
+                      )}
                     </td>
                     <td className="text-end fw-semibold">₹{c.taxableAmt.toFixed(2)}</td>
                     <td className="text-end small">
@@ -379,11 +435,14 @@ export default function CreateBill() {
                     </td>
                     <td className="text-end fw-bold text-primary">₹{c.lineTotal.toFixed(2)}</td>
                     <td className="text-center">
-                      {lines.length > 1 && (
-                        <button className="text-danger fs-5 border-0 bg-transparent p-1" onClick={() => removeLine(l.key)} title="Remove Line">
-                          <i className="bi bi-trash3"></i>
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        className="text-danger fs-5 border-0 bg-transparent p-1"
+                        onClick={() => removeLine(l.key)}
+                        title={lines.length > 1 ? 'Remove Line Item' : 'Clear Line Item'}
+                      >
+                        <i className="bi bi-trash3"></i>
+                      </button>
                     </td>
                   </tr>
                 );
@@ -427,30 +486,30 @@ export default function CreateBill() {
             <div className="card-body">
               <div className="d-flex justify-content-between mb-2">
                 <span>Subtotal (Taxable Amount)</span>
-                <span className="fw-semibold">₹{subtotal.toFixed(2)}</span>
+                <span className="fw-semibold">₹{formatCurrency(subtotal)}</span>
               </div>
 
               {sameState ? (
                 <>
                   <div className="d-flex justify-content-between mb-1 text-muted small">
                     <span>Central Tax (CGST)</span>
-                    <span>₹{totalCgst.toFixed(2)}</span>
+                    <span>₹{formatCurrency(totalCgst)}</span>
                   </div>
                   <div className="d-flex justify-content-between mb-2 text-muted small">
                     <span>State Tax (SGST)</span>
-                    <span>₹{totalSgst.toFixed(2)}</span>
+                    <span>₹{formatCurrency(totalSgst)}</span>
                   </div>
                 </>
               ) : (
                 <div className="d-flex justify-content-between mb-2 text-muted small">
                   <span>Integrated Tax (IGST)</span>
-                  <span>₹{totalIgst.toFixed(2)}</span>
+                  <span>₹{formatCurrency(totalIgst)}</span>
                 </div>
               )}
 
               <div className="d-flex justify-content-between mb-2 pb-2 border-bottom">
                 <span className="fw-semibold">Total Tax Amount</span>
-                <span className="fw-semibold text-danger">₹{totalTax.toFixed(2)}</span>
+                <span className="fw-semibold text-danger">₹{formatCurrency(totalTax)}</span>
               </div>
 
               <div className="d-flex justify-content-between align-items-center mb-3">
@@ -466,7 +525,7 @@ export default function CreateBill() {
 
               <div className="d-flex justify-content-between align-items-center bg-light p-3 rounded">
                 <span className="fs-5 fw-bold">Grand Total</span>
-                <span className="fs-4 fw-bold text-success">₹{grandTotal.toFixed(2)}</span>
+                <span className="fs-4 fw-bold text-success">₹{formatCurrency(grandTotal)}</span>
               </div>
             </div>
           </div>
@@ -474,7 +533,7 @@ export default function CreateBill() {
       </div>
 
       <div className="d-flex justify-content-end mb-5">
-        <button className="btn btn-success btn-lg px-5 shadow" onClick={handleSubmit} disabled={saving}>
+        <button className="btn btn-success px-4 shadow-sm" onClick={handleSubmit} disabled={saving}>
           {saving ? (
             <>
               <span className="spinner-border spinner-border-sm me-2"></span>
