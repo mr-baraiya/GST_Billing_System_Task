@@ -1,0 +1,315 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --sidebar-width: 260px;
+  --sidebar-bg: #0f172a;
+  --sidebar-hover: #1e293b;
+  --sidebar-active: #2563eb;
+  --bg-main: #f8fafc;
+  --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: var(--bg-main);
+  color: #1e293b;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Sidebar Styles */
+.sidebar {
+  width: var(--sidebar-width);
+  background-color: var(--sidebar-bg);
+  color: #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1000;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+  transition: all 0.3s ease;
+}
+
+.sidebar-brand {
+  padding: 1.5rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.brand-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.sidebar-menu {
+  flex: 1;
+  padding: 1.25rem 0.75rem;
+  overflow-y: auto;
+}
+
+.menu-category {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: #64748b;
+  padding: 1.15rem 0.75rem 0.4rem 0.75rem;
+  text-transform: uppercase;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.65rem 0.85rem;
+  color: #94a3b8;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.875rem;
+  border-radius: 8px;
+  margin-bottom: 0.35rem;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.sidebar-link i {
+  font-size: 1.15rem;
+  color: #64748b;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.sidebar-link:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-link:hover i {
+  color: #60a5fa;
+  transform: translateX(2px);
+}
+
+.sidebar-link.active {
+  color: #ffffff;
+  background: rgba(37, 99, 235, 0.15);
+  border-left: 3px solid #2563eb;
+  font-weight: 600;
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+}
+
+.sidebar-link.active i {
+  color: #3b82f6;
+}
+
+.sidebar-link.create-bill-action {
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  color: #60a5fa;
+}
+
+.sidebar-link.create-bill-action i {
+  color: #60a5fa;
+}
+
+.sidebar-link.create-bill-action:hover {
+  background: rgba(37, 99, 235, 0.16);
+  border-color: rgba(37, 99, 235, 0.35);
+  color: #ffffff;
+}
+
+.sidebar-link.create-bill-action.active {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.sidebar-link.create-bill-action.active i {
+  color: #ffffff;
+}
+
+.sidebar-footer {
+  padding: 1rem 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.shop-badge-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  background-color: #22c55e;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  box-shadow: 0 0 8px #22c55e;
+}
+
+/* Main Wrapper & Top Header */
+.main-wrapper {
+  margin-left: var(--sidebar-width);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.top-header {
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 1.15rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+
+.profile-avatar-btn {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-avatar-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
+}
+
+.main-content {
+  padding: 2rem;
+  flex: 1;
+}
+
+/* Cards & Components Styling */
+.card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  transition: all 0.2s ease;
+}
+
+.card-header {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 1rem 1.25rem;
+  border-top-left-radius: 12px !important;
+  border-top-right-radius: 12px !important;
+}
+
+.card-stat {
+  border-left: 4px solid #2563eb;
+  background: #ffffff;
+}
+
+.card-stat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.08);
+}
+
+.table th {
+  font-weight: 600;
+  color: #475569;
+  background-color: #f8fafc;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom-width: 1px;
+}
+
+.btn-primary {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+.btn-primary:hover {
+  background-color: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.print-hide {
+  display: block;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm;
+  }
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11px !important;
+  }
+  .sidebar, .top-header, .print-hide {
+    display: none !important;
+  }
+  .main-wrapper {
+    margin-left: 0 !important;
+  }
+  .main-content {
+    padding: 0 !important;
+  }
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    margin-bottom: 0 !important;
+    page-break-inside: avoid;
+  }
+  .table-responsive {
+    overflow: visible !important;
+    display: block !important;
+  }
+  .table {
+    width: 100% !important;
+    table-layout: auto !important;
+    font-size: 10px !important;
+  }
+  .table th, .table td {
+    padding: 4px 6px !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    font-size: 10px !important;
+  }
+}
+
+@media (max-width: 991.98px) {
+  :root {
+    --sidebar-width: 70px;
+  }
+  .brand-text, .menu-category, .sidebar-link span, .sidebar-footer {
+    display: none;
+  }
+  .sidebar-brand {
+    justify-content: center;
+    padding: 1rem 0;
+  }
+  .sidebar-link {
+    justify-content: center;
+    padding: 0.8rem 0;
+  }
+  .sidebar-link i {
+    font-size: 1.3rem;
+  }
+}
