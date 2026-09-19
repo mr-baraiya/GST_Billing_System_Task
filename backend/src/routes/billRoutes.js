@@ -4,6 +4,9 @@ const billController = require('../controllers/billController');
 const authMiddleware = require('../middleware/authMiddleware');
 const requirePermission = require('../middleware/permissionMiddleware');
 
+// Public route for WhatsApp / direct PDF link access
+router.get('/public/:id/pdf', billController.downloadBillPdf);
+
 router.use(authMiddleware);
 
 router.get('/', requirePermission('bills_history'), billController.getBills);

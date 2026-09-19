@@ -17,7 +17,7 @@ export default function LandingPage() {
       <NavbarPublic />
 
       {/* Hero Section */}
-      <section className="bg-dark text-white py-5 position-relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
+      <section className="bg-dark text-white py-5 position-relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0e1c36 0%, #172d54 100%)' }}>
         <div className="container py-lg-5 position-relative" style={{ zIndex: 2 }}>
           <div className="row align-items-center g-5">
             <div className="col-lg-6">
@@ -283,7 +283,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-dark text-white py-5 mt-auto" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)' }}>
+      <section className="bg-dark text-white py-5 mt-auto" style={{ background: 'linear-gradient(135deg, #172d54 0%, #0e1c36 100%)' }}>
         <div className="container text-center py-4">
           <h2 className="display-6 fw-black mb-3">Ready to Upgrade Your Retail Billing?</h2>
           <p className="lead text-slate-300 mb-4 max-w-xl mx-auto">

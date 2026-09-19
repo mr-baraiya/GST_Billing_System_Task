@@ -8,7 +8,7 @@ export default function AboutPage() {
       <NavbarPublic />
 
       {/* Hero Banner */}
-      <section className="bg-dark text-white py-5" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
+      <section className="bg-dark text-white py-5" style={{ background: 'linear-gradient(135deg, #0e1c36 0%, #172d54 100%)' }}>
         <div className="container py-4 text-center">
           <span className="badge bg-primary-subtle text-primary border border-primary px-3 py-1.5 rounded-pill fw-semibold mb-3">
             Our Mission & Story
@@ -88,7 +88,7 @@ export default function AboutPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-dark text-white py-5 mt-auto" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)' }}>
+      <section className="bg-dark text-white py-5 mt-auto" style={{ background: 'linear-gradient(135deg, #172d54 0%, #0e1c36 100%)' }}>
         <div className="container text-center py-3">
           <h3 className="fw-black mb-3">Join Thousands of Businesses Scaling with GSTKhata</h3>
           <Link to="/register" className="btn btn-primary btn-lg px-4 py-2.5 fw-bold rounded-pill">

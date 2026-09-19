@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import Pagination from '../components/Pagination';
+import WhatsAppShareModal from '../components/WhatsAppShareModal';
 
 export default function BillHistory() {
   const [bills, setBills] = useState([]);
@@ -10,6 +11,7 @@ export default function BillHistory() {
   const [toDate, setToDate] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [loading, setLoading] = useState(true);
+  const [selectedBillForWhatsApp, setSelectedBillForWhatsApp] = useState(null);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -62,6 +64,13 @@ export default function BillHistory() {
 
   return (
     <div>
+      <WhatsAppShareModal
+        bill={selectedBillForWhatsApp}
+        shop={selectedBillForWhatsApp?.shop}
+        show={!!selectedBillForWhatsApp}
+        onClose={() => setSelectedBillForWhatsApp(null)}
+      />
+
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4 className="fw-bold mb-0"><i className="bi bi-clock-history me-2 text-primary"></i>Invoice History</h4>
         <button className="btn btn-success btn-sm" onClick={exportCsv}>
@@ -165,9 +174,19 @@ export default function BillHistory() {
                       </span>
                     </td>
                     <td className="text-end">
-                      <Link to={`/bills/${b.id}`} className="text-primary fs-5 p-1 d-inline-flex align-items-center" title="View Invoice">
-                        <i className="bi bi-eye"></i>
-                      </Link>
+                      <div className="d-inline-flex align-items-center gap-1">
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-link text-success p-1"
+                          onClick={() => setSelectedBillForWhatsApp(b)}
+                          title="Share Invoice on WhatsApp"
+                        >
+                          <i className="bi bi-whatsapp fs-5"></i>
+                        </button>
+                        <Link to={`/bills/${b.id}`} className="text-primary fs-5 p-1 d-inline-flex align-items-center" title="View Invoice">
+                          <i className="bi bi-eye"></i>
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -219,9 +238,16 @@ export default function BillHistory() {
                     </div>
                   </div>
 
-                  <div className="d-flex justify-content-end border-top pt-2">
-                    <Link to={`/bills/${b.id}`} className="btn btn-sm btn-primary w-100">
-                      <i className="bi bi-eye me-1"></i> View Invoice Details
+                  <div className="d-flex gap-2 border-top pt-2">
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-success flex-grow-1"
+                      onClick={() => setSelectedBillForWhatsApp(b)}
+                    >
+                      <i className="bi bi-whatsapp me-1"></i> WhatsApp
+                    </button>
+                    <Link to={`/bills/${b.id}`} className="btn btn-sm btn-primary flex-grow-1">
+                      <i className="bi bi-eye me-1"></i> View Details
                     </Link>
                   </div>
                 </div>

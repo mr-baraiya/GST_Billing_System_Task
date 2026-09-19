@@ -72,7 +72,7 @@ export default function Dashboard() {
         label: 'Tax Collected (₹)',
         data: trendTax,
         borderColor: '#10b981',
-        backgroundColor: 'rgba(16, 185, 129, 0.08)',
+        backgroundColor: 'rgba(16, 185, 129, 0.12)',
         tension: 0.4,
         fill: true,
         pointBackgroundColor: '#10b981',
@@ -90,7 +90,7 @@ export default function Dashboard() {
     },
     scales: {
       x: { grid: { display: false } },
-      y: { ticks: { callback: (val) => `₹${val.toLocaleString('en-IN')}` }, grid: { color: '#f1f5f9' } },
+      y: { ticks: { callback: (val) => `₹${val.toLocaleString('en-IN')}` }, grid: { color: 'rgba(226, 232, 240, 0.8)' } },
     },
   };
 
@@ -178,15 +178,15 @@ export default function Dashboard() {
       {/* Metrics Row */}
       <div className="row g-3 mb-4">
         <div className="col-md-3 col-6">
-          <div className="card card-stat shadow-sm h-100 p-3">
+          <div className="card card-stat shadow-sm h-100 p-3" style={{ borderLeftColor: '#2563eb' }}>
             <div className="text-muted small fw-semibold text-uppercase">Total Sales</div>
             <h3 className="fw-bold text-dark my-1">₹{data.totalSales.toFixed(2)}</h3>
-            <div className="text-muted small"><i className="bi bi-graph-up-arrow text-success me-1"></i> Cumulative Sales</div>
+            <div className="text-muted small"><i className="bi bi-graph-up-arrow text-primary me-1"></i> Cumulative Sales</div>
           </div>
         </div>
 
         <div className="col-md-3 col-6">
-          <div className="card card-stat shadow-sm h-100 p-3" style={{ borderLeftColor: '#dc2626' }}>
+          <div className="card card-stat shadow-sm h-100 p-3" style={{ borderLeftColor: '#ef4444' }}>
             <div className="text-muted small fw-semibold text-uppercase">Total Tax Collected</div>
             <h3 className="fw-bold text-danger my-1">₹{data.totalTax.toFixed(2)}</h3>
             <div className="text-muted small"><i className="bi bi-piggy-bank me-1"></i> CGST + SGST + IGST</div>
@@ -194,7 +194,7 @@ export default function Dashboard() {
         </div>
 
         <div className="col-md-3 col-6">
-          <div className="card card-stat shadow-sm h-100 p-3" style={{ borderLeftColor: '#16a34a' }}>
+          <div className="card card-stat shadow-sm h-100 p-3" style={{ borderLeftColor: '#10b981' }}>
             <div className="text-muted small fw-semibold text-uppercase">Total Invoices</div>
             <h3 className="fw-bold text-success my-1">{data.totalBills}</h3>
             <div className="text-muted small"><i className="bi bi-receipt me-1"></i> Saved Bills</div>
@@ -202,9 +202,9 @@ export default function Dashboard() {
         </div>
 
         <div className="col-md-3 col-6">
-          <div className="card card-stat shadow-sm h-100 p-3" style={{ borderLeftColor: '#9333ea' }}>
+          <div className="card card-stat shadow-sm h-100 p-3" style={{ borderLeftColor: '#8b5cf6' }}>
             <div className="text-muted small fw-semibold text-uppercase">This Month</div>
-            <h3 className="fw-bold text-purple my-1">₹{data.thisMonth.amount.toFixed(2)}</h3>
+            <h3 className="fw-bold text-primary my-1">₹{data.thisMonth.amount.toFixed(2)}</h3>
             <div className="text-muted small">{data.thisMonth.count} bills generated</div>
           </div>
         </div>

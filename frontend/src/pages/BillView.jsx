@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api/axios';
+import WhatsAppShareModal from '../components/WhatsAppShareModal';
 
 export default function BillView() {
   const { id } = useParams();
   const [bill, setBill] = useState(null);
   const [error, setError] = useState('');
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
 
   useEffect(() => {
     api.get(`/bills/${id}`)
@@ -87,12 +89,6 @@ export default function BillView() {
   const shop = bill.shop || {};
   const isIgst = bill.tax_type === 'IGST';
 
-  // WhatsApp Share text URL
-  const shareText = encodeURIComponent(
-    `Hello ${bill.party_name}, here is your Tax Invoice ${bill.invoice_no} for ₹${Number(bill.grand_total).toFixed(2)}. Status: ${bill.status}.`
-  );
-  const whatsappUrl = `https://api.whatsapp.com/send?text=${shareText}`;
-
   return (
     <div>
       {emailSuccess && (
@@ -101,6 +97,14 @@ export default function BillView() {
           <button type="button" className="btn-close" onClick={() => setEmailSuccess('')}></button>
         </div>
       )}
+
+      {/* WhatsApp Share Modal */}
+      <WhatsAppShareModal
+        bill={bill}
+        shop={shop}
+        show={showWhatsAppModal}
+        onClose={() => setShowWhatsAppModal(false)}
+      />
 
       {/* Top Action Bar (hidden when printing) */}
       <div className="d-flex justify-content-between align-items-center mb-3 print-hide">
@@ -119,9 +123,9 @@ export default function BillView() {
               </>
             )}
           </button>
-          <a href={whatsappUrl} target="_blank" rel="noreferrer" className="btn btn-success btn-sm">
+          <button className="btn btn-success btn-sm fw-semibold" onClick={() => setShowWhatsAppModal(true)}>
             <i className="bi bi-whatsapp me-1"></i> Share WhatsApp
-          </a>
+          </button>
           <button className="btn btn-primary btn-sm" onClick={printInvoice}>
             <i className="bi bi-printer me-1"></i> Print Invoice
           </button>

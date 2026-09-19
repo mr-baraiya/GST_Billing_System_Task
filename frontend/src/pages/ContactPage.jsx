@@ -55,7 +55,7 @@ export default function ContactPage() {
       <NavbarPublic />
 
       {/* Hero Banner */}
-      <section className="bg-dark text-white py-5" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
+      <section className="bg-dark text-white py-5" style={{ background: 'linear-gradient(135deg, #0e1c36 0%, #172d54 100%)' }}>
         <div className="container py-4 text-center">
           <span className="badge bg-primary-subtle text-primary border border-primary px-3 py-1.5 rounded-pill fw-semibold mb-3">
             Contact & Customer Support
